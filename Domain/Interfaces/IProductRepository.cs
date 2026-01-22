@@ -1,5 +1,6 @@
 ﻿using Domain.entities;
 using Domain.Entities;
+using Domain.Entities.Enum;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,5 +11,10 @@ namespace Domain.Interfaces
     {
         Task<Product> AddAsync(Product product);
 
+        Task<IEnumerable<Product>> GetByFiltersAsync(
+            string? name,
+            int? categoryId,
+            ProductStatus? status,
+            int page);
     }
 }
