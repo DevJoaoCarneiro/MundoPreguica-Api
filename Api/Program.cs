@@ -4,6 +4,7 @@ using Application.Services;
 using Domain.Interfaces;
 using Domain.Repository;
 using Infrastructure.Context;
+using Infrastructure.ExternalServices;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ISecurityService, BCryptoSecurityService>();
 builder.Services.AddScoped<IProductServices, ProductService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IImageUploadService, CloudinaryService>();
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>

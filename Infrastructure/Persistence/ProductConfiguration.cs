@@ -1,10 +1,6 @@
-﻿using Domain.entities;
-using Domain.Entities;
+﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Infrastructure.Persistence
 {
@@ -21,10 +17,6 @@ namespace Infrastructure.Persistence
 
             builder.Property(p => p.Name)
                    .HasColumnName("nome")
-                   .IsRequired();
-
-            builder.Property(p => p.Category)
-                   .HasColumnName("categoria")
                    .IsRequired();
 
             builder.Property(p => p.Price)
@@ -47,6 +39,11 @@ namespace Infrastructure.Persistence
 
             builder.Property(p => p.UpdatedAt)
                    .HasColumnName("data_update");
+
+            builder.HasOne(p => p.Category)
+                   .WithMany()
+                   .HasForeignKey(p => p.CategoryId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

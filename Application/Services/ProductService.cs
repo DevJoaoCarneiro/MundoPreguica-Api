@@ -13,10 +13,12 @@ namespace Application.Services
     public class ProductService : IProductServices
     {
         private readonly IProductRepository _productRepository;
+        private readonly IImageUploadService _imageUploadService;
 
-        public ProductService(IProductRepository productRepository)
+        public ProductService(IProductRepository productRepository, IImageUploadService imageUploadService)
         {
             _productRepository = productRepository;
+            _imageUploadService = imageUploadService;
         }
 
         public async Task<ProductResponseDto> createNewProduct(ProductRequestDto productRequestDto)
@@ -33,13 +35,26 @@ namespace Application.Services
                     };
                 }
 
+                var imageUrl = await _imageUploadService.UploadImageAsync(productRequestDto.Image);
+
+                if (imageUrl == null)
+                {
+                    return new ProductResponseDto
+                    {
+                        Message = "Image is required",
+                        Status = "invalid_argument",
+                        Data = null
+                    };
+                }
+
+                
                 var newProduct = new Product
                 {
                     Id = Guid.NewGuid(),
                     Name = productRequestDto.Name,
-                    Category = productRequestDto.Category,
+                    CategoryId = productRequestDto.CategoryId,
                     Price = productRequestDto.Price,
-                    ImageUrL = productRequestDto.ImageUrL,
+                    ImageUrL = imageUrl,
                     Status = ProductStatus.Available,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -55,7 +70,7 @@ namespace Application.Services
                     {
                         Id = newProduct.Id,
                         Name = newProduct.Name,
-                        Category = newProduct.Category,
+                        Category = newProduct.CategoryId,
                         Price = newProduct.Price,
                         ImageUrL = newProduct.ImageUrL
                     }

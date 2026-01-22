@@ -18,7 +18,7 @@ namespace Api.controller
         }
 
         [HttpPost]
-        public async Task<IActionResult> createProduct([FromBody] ProductRequestDto productRequestDto)
+        public async Task<IActionResult> createProduct([FromForm] ProductRequestDto productRequestDto)
         {
             try
             {
