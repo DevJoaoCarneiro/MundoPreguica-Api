@@ -34,7 +34,8 @@ namespace Infrastructure.Repositories
             string? name,
             int? categoryId,
             ProductStatus? status,
-            int page)
+            int page,
+            ProductSize? size)
         {
             var query = _context.Products
                 .Include(p => p.Category)
@@ -48,6 +49,9 @@ namespace Infrastructure.Repositories
 
             if (status.HasValue)
                 query = query.Where(p => p.Status == status.Value);
+
+            if (size.HasValue)
+                query = query.Where(p => p.Size == size.Value);
 
             return await query
                 .OrderByDescending(p => p.CreatedAt)

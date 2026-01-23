@@ -15,6 +15,7 @@ namespace Domain.Interfaces
             string? name,
             int? categoryId,
             ProductStatus? status,
-            int page);
+            int page,
+            ProductSize? size);
     }
 }

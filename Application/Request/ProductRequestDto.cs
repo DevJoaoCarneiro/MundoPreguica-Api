@@ -13,6 +13,7 @@ namespace Application.Request
         public int CategoryId { get; set; }
         public decimal Price { get; set; }
 
+        public int Size { get; set; }
         public IFormFile Image { get; set; }
 
     }

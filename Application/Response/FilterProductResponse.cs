@@ -18,9 +18,12 @@ namespace Application.Response
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public int Category { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public string Size { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string ImageUrL { get; set; } = string.Empty;
+
     }
 }
 

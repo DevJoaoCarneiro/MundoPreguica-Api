@@ -60,6 +60,7 @@ namespace Application.Services
                     CategoryId = productRequestDto.CategoryId,
                     Price = productRequestDto.Price,
                     ImageUrL = imageUrl,
+                    Size = (ProductSize)productRequestDto.Size,
                     Status = ProductStatus.Available,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -90,6 +91,7 @@ namespace Application.Services
                         Id = newProduct.Id,
                         Name = newProduct.Name,
                         Category = newProduct.CategoryId,
+                        Size = newProduct.Size.ToString(),
                         Price = newProduct.Price,
                         ImageUrL = newProduct.ImageUrL
                     }
@@ -120,13 +122,16 @@ namespace Application.Services
                     filter.Name,
                     filter.CategoryId,
                     filter.Status,
-                    filter.Page);
+                    filter.Page,
+                    filter.Size);
 
                 var productList = products.Select(p => new DataResponse
                 {
                     Id = p.Id,
                     Name = p.Name,
-                    Category = p.CategoryId,
+                    Category = p.Category?.Name ?? "Sem Categoria",
+                    Size = p.Size.ToString(),
+                    Status = p.Status.ToString(),
                     Price = p.Price,
                     ImageUrL = p.ImageUrL
                 }).ToList();

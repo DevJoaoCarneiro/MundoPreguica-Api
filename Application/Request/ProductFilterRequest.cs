@@ -10,6 +10,10 @@ namespace Application.Request
         public string? Name { get; set; }
         public int? CategoryId { get; set; }
         public ProductStatus? Status { get; set; }
+
+        public ProductSize? Size { get; set; }
         public int Page { get; set; } = 1;
+
+        
     }
 }

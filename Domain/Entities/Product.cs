@@ -1,4 +1,5 @@
 ﻿using Domain.Entities.Enum;
+using System.Drawing;
 
 namespace Domain.Entities
 {
@@ -11,6 +12,8 @@ namespace Domain.Entities
         public decimal Price { get; set; }
 
         public string ImageUrL { get; set; } = string.Empty;
+
+        public ProductSize Size { get; set; }
 
         public ProductStatus Status { get; set; }
 
