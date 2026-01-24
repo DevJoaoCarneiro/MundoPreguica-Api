@@ -9,5 +9,7 @@ namespace Application.Interfaces
     public interface IAuthService
     {
         Task<LoginResponseDto> AuthenticateLogin(LoginRequestDto loginRequestDTO);
+
+        Task<RefreshTokenResponseDTO> RefreshToken(RefreshTokenRequestDTO refreshTokenRequestDTO);
     }
 }

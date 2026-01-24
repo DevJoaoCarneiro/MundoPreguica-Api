@@ -43,6 +43,32 @@ namespace Api.controller
             }
         }
 
-       
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDTO refreshTokenRequestDTO)
+        {
+            try
+            {
+                var result = await _authService.RefreshToken(refreshTokenRequestDTO);
+                return result.Status switch
+                {
+                    "invalid_token" => Unauthorized(result),
+                    "expired_token" => Unauthorized(result),
+                    "security_alert" => Unauthorized(result),
+                    "not-found" => StatusCode(404, result),
+                    "error" => StatusCode(500, result),
+                    _ => Ok(result)
+                };
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Message = "Internal server error",
+                    detail = ex.Message
+                });
+            }
+        }
+
+
     }
 }
