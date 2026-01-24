@@ -27,7 +27,7 @@ namespace Api.controller
             {
                 var result = await _userService.createUser(userRequestDTO);
 
-                return result.status switch
+                return result.Status switch
                 {
                     "invalid_argument" => BadRequest(500),
                     "not_found" => NotFound(404),

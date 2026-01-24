@@ -9,5 +9,12 @@ namespace Domain.Repository
     {
         Task<User> AddAsync(User user);
 
+        Task<User> GetByEmailAsync(string email);
+
+        Task<User> GetByIdAsync(Guid userId);
+
+        Task<User> UpdateAsync(User user);
+
+        Task<User?> GetByResetTokenAsync(string resetToken);
     }
 }

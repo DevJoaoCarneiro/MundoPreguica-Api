@@ -13,20 +13,20 @@ namespace Infrastructure.Persistence
         {
             builder.ToTable("Users");
 
-            builder.HasKey(c => c.userId);
+            builder.HasKey(c => c.UserId);
 
-            builder.Property(c => c.userId)
+            builder.Property(c => c.UserId)
                 .ValueGeneratedOnAdd();
 
-            builder.Property(c => c.name)
+            builder.Property(c => c.Name)
                 .IsRequired()
                 .HasMaxLength(100);
 
-            builder.Property(c => c.email)
+            builder.Property(c => c.Email)
                 .IsRequired()
                 .HasMaxLength(100);
 
-            builder.Property(c => c.passwordHash)
+            builder.Property(c => c.PasswordHash)
                 .IsRequired();
 
         }

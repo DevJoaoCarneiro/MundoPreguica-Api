@@ -31,31 +31,35 @@ namespace Application.Service
                 {
                     return new UserResponseDTO
                     {
-                        message = "Parameters is empty or null",
-                        status = "invalid_argument",
-                        data = null
+                        Message = "Parameters is empty or null",
+                        Status = "invalid_argument",
+                        Data = null
                     };
                 }
 
                 string passwordHash = _securityService.HashPassword(userRequestDTO.password);
 
                 var newUser = new User
-                (
-                    userRequestDTO.name,
-                    userRequestDTO.email,
-                    passwordHash
-                );
+                {
+                    UserId = Guid.NewGuid(),
+                    Name =userRequestDTO.name,
+                    Email = userRequestDTO.email,
+                    PasswordHash = passwordHash,
+                    CreatedAt = DateTime.UtcNow
+
+                };
 
                 await _userRepository.AddAsync(newUser);
 
                 return new UserResponseDTO
                 {
-                    message = "User created successfully",
-                    status = "Success",
-                    data = new UserData
+                    Message = "User created successfully",
+                    Status = "Success",
+                    Data = new UserData
                     {
-                        name = newUser.name,
-                        email = newUser.email
+                        Name = userRequestDTO.name,
+                        Email = userRequestDTO.email,
+                        CreatedAt = DateTime.UtcNow
                     }
                 };
             }
@@ -64,9 +68,9 @@ namespace Application.Service
 
                 return new UserResponseDTO
                 {
-                    message = $"An error occurred: {ex.Message}",
-                    status = "error",
-                    data = null
+                    Message = $"An error occurred: {ex.Message}",
+                    Status = "error",
+                    Data = null
                 };
             }
             

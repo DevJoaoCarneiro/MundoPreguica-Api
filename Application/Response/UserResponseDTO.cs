@@ -8,19 +8,23 @@ namespace Application.Response
     public class UserResponseDTO
     {
         [JsonPropertyName("message")]
-        public string message { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
 
         [JsonPropertyName("status")]
-        public string status { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
 
-        public UserData? data { get; set; } = new UserData();
+        public UserData? Data { get; set; } = new UserData();
     }
 
     public class UserData
     {
         [JsonPropertyName("name")]
-        public string name { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
         [JsonPropertyName("email")]
-        public string email { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+
+        [JsonPropertyName("created_at")]
+        public DateTime CreatedAt { get; set; }
+
     }
 }
