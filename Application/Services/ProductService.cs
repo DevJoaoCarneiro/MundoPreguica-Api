@@ -291,5 +291,65 @@ namespace Application.Services
                 };
             }
         }
+
+        public async Task<ProductStatusResponseDto> UpdateStatusAsync(Guid productId, ProductStatus newStatus)
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando alteração de status para o produto: {ProductId}", productId);
+
+                var existingProduct = await _productRepository.GetByIdAsync(productId);
+
+                if (existingProduct == null)
+                {
+                    _logger.LogWarning("Produto {ProductId} não encontrado para alteração de status.", productId);
+                    return new ProductStatusResponseDto
+                    {
+                        Message = "Produto não encontrado",
+                        Status = "not_found",
+                        Data = null
+                    };
+                }
+
+                existingProduct.Status = newStatus;
+                existingProduct.UpdatedAt = DateTime.UtcNow;
+
+                var updatedProduct = await _productRepository.UpdateAsync(existingProduct);
+
+                if (updatedProduct == null)
+                {
+                    return new ProductStatusResponseDto
+                    {
+                        Message = "Erro ao persistir a mudança de status no banco",
+                        Status = "error",
+                        Data = null
+                    };
+                }
+
+                _logger.LogInformation("Status do produto {ProductId} alterado para {Status} com sucesso.", productId, newStatus);
+
+                return new ProductStatusResponseDto
+                {
+                    Message = "Status updated successfully",
+                    Status = "success",
+                    Data = new DataStatus
+                    {
+                        Id = updatedProduct.Id,
+                        Name = updatedProduct.Name,
+                        ProductStatus = updatedProduct.Status.ToString(),
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro inesperado ao atualizar status do produto: {ProductId}", productId);
+                return new ProductStatusResponseDto
+                {
+                    Message = "Error while updating status: " + ex.Message,
+                    Status = "error",
+                    Data = null
+                };
+            }
+        }
     }
 }

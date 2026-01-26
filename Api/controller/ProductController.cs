@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Application.Request;
 using Application.Service;
+using Domain.Entities.Enum;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.controller
@@ -128,6 +129,36 @@ namespace Api.controller
                 return StatusCode(500, new
                 {
                     Message = "Ocorreu um erro inesperado ao editar o produto: " + ex.Message,
+                    Status = "error"
+                });
+            }
+        }
+
+        [HttpPatch]
+        [Route("{productId}/status")]
+        public async Task<IActionResult> updateProductStatus([FromRoute] Guid productId, [FromBody] int newStatus)
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando alteração de status para o produto ID: {ProductId}", productId);
+
+                var statusEnum = (ProductStatus)newStatus;
+
+                var result = await _productServices.UpdateStatusAsync(productId, statusEnum);
+
+                return result.Status switch
+                {
+                    "not_found" => NotFound(result),
+                    "error" => StatusCode(500, result),
+                    _ => Ok(result)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao alterar status do produto ID: {ProductId}", productId);
+                return StatusCode(500, new
+                {
+                    Message = "Erro ao processar alteração de status: " + ex.Message,
                     Status = "error"
                 });
             }
