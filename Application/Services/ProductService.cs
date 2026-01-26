@@ -7,7 +7,10 @@ using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Application.Services
 {
@@ -52,7 +55,7 @@ namespace Application.Services
                     };
                 }
 
-                
+
                 var newProduct = new Product
                 {
                     Id = Guid.NewGuid(),
@@ -104,12 +107,12 @@ namespace Application.Services
 
                 return new ProductResponseDto
                 {
-                    Message = "Error while is creating a product.: " +ex.Message,
+                    Message = "Error while is creating a product.: " + ex.Message,
                     Status = "error",
                     Data = null
                 };
             }
-            
+
 
         }
 
@@ -153,6 +156,138 @@ namespace Application.Services
                     Message = "Erro ao processar consulta: " + ex.Message,
                     Status = "error",
                     DataList = null
+                };
+            }
+        }
+
+        public async Task<ProductResponseDto> GetByIdAsync(Guid productId)
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando busca de produto por ID: {ProductId}", productId);
+
+                var product = await _productRepository.GetByIdAsync(productId);
+
+                if (product == null)
+                {
+                    _logger.LogInformation("Produto não encontrado");
+                    return new ProductResponseDto
+                    {
+                        Message = "Produto não encontrado ou não existente",
+                        Status = "not_found",
+                        Data = null
+                    };
+                }
+
+                _logger.LogInformation("Produto encontrado: {ProductName}", product.Name);
+                return new ProductResponseDto
+                {
+                    Message = "Produto encontrado com sucesso",
+                    Status = "success",
+                    Data = new Data
+                    {
+                        Id = product.Id,
+                        Name = product.Name,
+                        Category = product.CategoryId,
+                        Size = product.Size.ToString(),
+                        Price = product.Price,
+                        ImageUrL = product.ImageUrL
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao processar consulta filtrada de produtos.");
+                return new ProductResponseDto
+                {
+                    Message = "Erro ao processar consulta: " + ex.Message,
+                    Status = "error",
+                    Data = null
+                };
+            }
+        }
+
+
+        public async Task<ProductResponseDto> updateProductById(Guid productId, ProductRequestDto productRequestDto)
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando atualização do produto ID: {ProductId}", productId);
+
+                var existingProduct = await _productRepository.GetByIdAsync(productId);
+
+                if (existingProduct == null)
+                {
+                    _logger.LogWarning("Produto ID: {ProductId} não encontrado para edição.", productId);
+                    return new ProductResponseDto
+                    {
+                        Message = "Produto não encontrado",
+                        Status = "not_found",
+                        Data = null
+                    };
+                }
+
+                string imageUrl = existingProduct.ImageUrL;
+                if (productRequestDto.Image != null && productRequestDto.Image.Length > 0)
+                {
+                    _logger.LogInformation("Nova imagem enviada. Fazendo upload...");
+                    existingProduct.ImageUrL = await _imageUploadService.UploadImageAsync(productRequestDto.Image);
+                }
+
+                if (!string.IsNullOrWhiteSpace(productRequestDto.Name))
+                    existingProduct.Name = productRequestDto.Name;
+
+                if (productRequestDto.CategoryId > 0)
+                    existingProduct.CategoryId = productRequestDto.CategoryId;
+
+                if (productRequestDto.Price > 0)
+                    existingProduct.Price = productRequestDto.Price;
+
+                if (productRequestDto.Size > 0)
+                    existingProduct.Size = (ProductSize)productRequestDto.Size;
+
+
+                existingProduct.UpdatedAt = DateTime.UtcNow;
+
+
+                var updatedProduct = await _productRepository.UpdateAsync(existingProduct);
+
+                if (updatedProduct == null)
+                {
+                    _logger.LogError("Erro ao persistir a atualização do produto {ProductId} no banco.", productId);
+                    return new ProductResponseDto
+                    {
+                        Message = "Erro ao persistir no banco",
+                        Status = "error",
+                        Data = null
+                    };
+                }
+
+                _logger.LogInformation("Produto {ProductId} atualizado com sucesso!", productId);
+
+                return new ProductResponseDto
+                {
+                    Message = "Product updated successfully",
+                    Status = "success",
+                    Data = new Data
+                    {
+                        Id = updatedProduct.Id,
+                        Name = updatedProduct.Name,
+                        Category = updatedProduct.CategoryId,
+                        Size = updatedProduct.Size.ToString(),
+                        Price = updatedProduct.Price,
+                        ImageUrL = updatedProduct.ImageUrL
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro inesperado ao editar o produto: {ProductId}", productId);
+                return new ProductResponseDto
+                {
+                    Message = "Error while updating the product: " + ex.Message,
+                    Status = "error",
+                    Data = null
                 };
             }
         }

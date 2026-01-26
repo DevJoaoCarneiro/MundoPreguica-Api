@@ -12,5 +12,9 @@ namespace Application.Interfaces
         Task<ProductResponseDto> createNewProduct(ProductRequestDto productRequestDto);
 
         Task<FilterProductResponse> GetByFiltersAsync(ProductFilterRequest filter);
+
+        Task<ProductResponseDto> GetByIdAsync(Guid productId);
+
+        Task<ProductResponseDto> updateProductById(Guid productId, ProductRequestDto productRequestDto);
     }
 }

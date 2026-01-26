@@ -17,5 +17,9 @@ namespace Domain.Interfaces
             ProductStatus? status,
             int page,
             ProductSize? size);
+
+        Task<Product> GetByIdAsync(Guid productId);
+
+        Task<Product>UpdateAsync(Product product);
     }
 }

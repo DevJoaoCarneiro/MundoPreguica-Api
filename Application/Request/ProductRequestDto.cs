@@ -14,7 +14,7 @@ namespace Application.Request
         public decimal Price { get; set; }
 
         public int Size { get; set; }
-        public IFormFile Image { get; set; }
+        public IFormFile? Image { get; set; }
 
     }
 }
