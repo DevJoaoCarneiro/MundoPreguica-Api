@@ -17,11 +17,14 @@ namespace Infrastructure.Context
         public DbSet<User> Users => Set<User>();
         public DbSet<Product> Products => Set<Product>();
 
+        public DbSet<Category> Category => Set<Category>();
+
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Category>().ToTable("Category");
         }
     }
 }
