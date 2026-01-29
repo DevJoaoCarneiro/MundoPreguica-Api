@@ -28,6 +28,10 @@ namespace Infrastructure.Persistence
                    .HasColumnName("image_url")
                    .IsRequired();
 
+            builder.Property(p => p.Stock)
+                   .HasColumnName("stock")
+                   .IsRequired();
+
             builder.Property(p => p.Size)
                    .HasColumnName("size")
                    .IsRequired()

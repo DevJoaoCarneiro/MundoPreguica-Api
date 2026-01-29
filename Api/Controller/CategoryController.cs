@@ -24,7 +24,7 @@ namespace Api.Controller
         {
             try
             {
-                _logger.LogInformation("Começando a consulta de produto..");
+                _logger.LogInformation("Começando a a busca de categorias..");
                 var result = await _categoryService.GetAllCategoriesAsync();
 
                 return result.Status switch
@@ -36,10 +36,10 @@ namespace Api.Controller
             }
             catch (Exception ex)
             {
-                _logger.LogError("Erro na consulta de produto..");
+                _logger.LogError("Erro na busca de categorias..");
                 return StatusCode(500, new
                 {
-                    Message = "Ocorreu um erro inesperado ao criar o produto: " + ex.Message,
+                    Message = "Ocorreu um erro inesperado buscar categoria: " + ex.Message,
                     Status = "error"
                 });
             }

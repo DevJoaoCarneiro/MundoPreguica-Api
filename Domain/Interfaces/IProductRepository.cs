@@ -21,5 +21,7 @@ namespace Domain.Interfaces
         Task<Product> GetByIdAsync(Guid productId);
 
         Task<Product>UpdateAsync(Product product);
+
+
     }
 }

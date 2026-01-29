@@ -21,6 +21,10 @@ namespace Infrastructure.Context
 
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+        public DbSet<Order> Order => Set<Order>();
+
+        public DbSet<Client> Client => Set<Client>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
