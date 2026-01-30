@@ -9,9 +9,7 @@ namespace Application.Request
     {
         public int OrderType { get; set; }
 
-        public decimal TotalAmount { get; set; }
-
-        public ClientRequest ClientInformation = new ClientRequest();
+        public ClientRequest ClientInformation { get; set; } = new ClientRequest();
 
         public List<ProductInformation> ProductInformation { get; set; } = new List<ProductInformation>();
     }

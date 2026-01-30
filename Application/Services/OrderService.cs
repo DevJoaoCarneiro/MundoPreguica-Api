@@ -16,17 +16,27 @@ namespace Application.Services
         private readonly IClientRepository _clientRepository;
         private readonly IProductRepository _productRepository;
         private readonly IOrderRepository _orderRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public OrderService(ILogger<OrderService> logger, IClientRepository clientRepository, IProductRepository productRepository, IOrderRepository orderRepository)
+        public OrderService(
+            ILogger<OrderService> logger,
+            IClientRepository clientRepository,
+            IProductRepository productRepository,
+            IOrderRepository orderRepository,
+            IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _clientRepository = clientRepository;
             _productRepository = productRepository;
             _orderRepository = orderRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<OrderResponseDto> createNewOrderAsync(OrderRequestDto orderRequestDto)
         {
+            _logger.LogInformation("Iniciando transação para novo pedido.");
+            await _unitOfWork.BeginTransactionAsync();
+
             try
             {
                 _logger.LogInformation("Iniciando processamento de novo pedido para o cliente: {CustomerName}", orderRequestDto?.ClientInformation.Name);
@@ -34,6 +44,7 @@ namespace Application.Services
                 if (orderRequestDto == null || orderRequestDto.ProductInformation == null || !orderRequestDto.ProductInformation.Any())
                 {
                     _logger.LogWarning("Tentativa de criar pedido com dados nulos ou sem itens.");
+                    await _unitOfWork.RollbackTransactionAsync();
                     return new OrderResponseDto
                     {
                         Message = "O pedido deve conter ao menos um item.",
@@ -73,6 +84,7 @@ namespace Application.Services
                     if (product == null || product.Stock < itemDto.Amount)
                     {
                         _logger.LogWarning("Falha no estoque ou produto inexistente. ID: {ProductId}", itemDto.ProductId);
+                        await _unitOfWork.RollbackTransactionAsync();
                         return new OrderResponseDto
                         {
                             Message = $"Estoque insuficiente ou produto não encontrado para o ID: {itemDto.ProductId}",
@@ -103,16 +115,19 @@ namespace Application.Services
                 _logger.LogInformation("Salvando pedido no banco. Total: {Total}", totalOrderValue);
                 var savedOrder = await _orderRepository.AddAsync(order);
 
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
                 return new OrderResponseDto
                 {
                     Message = "Pedido finalizado com sucesso!",
                     Status = "success"
-                    //Adicionar mais detalhes se necessário
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro crítico ao processar o pedido.");
+                await _unitOfWork.RollbackTransactionAsync();
                 return new OrderResponseDto
                 {
                     Message = "Erro interno ao processar pedido: " + ex.Message,

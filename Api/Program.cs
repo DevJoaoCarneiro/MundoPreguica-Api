@@ -5,6 +5,7 @@ using Domain.Interfaces;
 using Domain.Repository;
 using Infrastructure.Context;
 using Infrastructure.ExternalServices;
+using Infrastructure.Persistence;
 using Infrastructure.Provider;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
@@ -36,6 +37,10 @@ builder.Services.AddScoped<ITokenService, JwtTokenProvider>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
