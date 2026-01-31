@@ -125,7 +125,7 @@ namespace Api.controller
             }
             catch (Exception ex)
             {
-                _logger.LogError("Erro ao editar o produto..", productRequestDto.Name);
+                _logger.LogError("Erro ao editar o produto..", ex.Message);
                 return StatusCode(500, new
                 {
                     Message = "Ocorreu um erro inesperado ao editar o produto: " + ex.Message,

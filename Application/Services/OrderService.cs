@@ -134,7 +134,73 @@ namespace Application.Services
                     Status = "error"
                 };
             }
-        
+
+        }
+
+        public async Task<OrderResponseListDto> GetAllOrdersAsync(int page)
+        {
+            const int FixedPageSize = 10;
+
+            try
+            {
+                int currentPage = page > 0 ? page : 1;
+
+                _logger.LogInformation("Buscando pedidos paginados. Página: {Page}, Tamanho: {Size}", currentPage, FixedPageSize);
+
+                var (orders, totalItems) = await _orderRepository.GetAllPagedAsync(currentPage, FixedPageSize);
+
+                if (orders == null || !orders.Any())
+                {
+                    _logger.LogWarning("Nenhum pedido encontrado para os filtros aplicados.");
+                    return new OrderResponseListDto
+                    {
+                        Message = "Nenhum pedido encontrado.",
+                        Status = "success",
+                        TotalItems = 0,
+                        Orders = new List<ProductOrderDto>()
+                    };
+                }
+
+                var orderList = orders.Select(order => new ProductOrderDto
+                {
+                    OrderId = order.Id,
+                    CustomerName = order.Client?.clientName ?? "Cliente não identificado",
+                    CustomerPhone = order.Client?.clientPhone ?? "N/A",
+                    TotalValue = order.TotalValue,
+                    Date = order.OrderDate,
+                    OrderStatus = "Finalizado",
+                    Items = order.Items.Select(i => new OrderItemSummaryDto
+                    {
+                        ProductName = i.Product?.Name ?? "Produto Removido",
+                        Size = i.Product?.Size.ToString() ?? "-",
+                        Quantity = i.Quantity
+                    }).ToList()
+                }).ToList();
+
+                _logger.LogInformation("Recuperados {Count} pedidos de um total de {Total}.", orderList.Count, totalItems);
+
+                return new OrderResponseListDto
+                {
+                    Message = "Lista de pedidos recuperada com sucesso.",
+                    Status = "success",
+                    TotalItems = totalItems,
+                    CurrentPage = currentPage,
+                    PageSize = FixedPageSize,
+                    TotalPages = (int)Math.Ceiling((double)totalItems / FixedPageSize),
+                    Orders = orderList
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro fatal ao listar pedidos paginados.");
+
+                return new OrderResponseListDto
+                {
+                    Message = "Erro interno ao processar a lista de pedidos: " + ex.Message,
+                    Status = "error",
+                    Orders = new List<ProductOrderDto>()
+                };
+            }
         }
     }
 }

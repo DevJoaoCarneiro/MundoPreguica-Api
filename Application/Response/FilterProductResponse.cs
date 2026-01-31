@@ -35,7 +35,7 @@ namespace Application.Response
     public class VariantInfo
     {
         public Guid Id { get; set; }
-        public string Size { get; set; }
+        public string Size { get; set; } = string.Empty;
         public int Stock { get; set; }
     }
 }

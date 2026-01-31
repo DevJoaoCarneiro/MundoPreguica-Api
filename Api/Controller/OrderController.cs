@@ -48,5 +48,31 @@ namespace Api.Controller
             }
 
         }
+
+        [HttpGet]
+        public async Task<IActionResult> getAllOrder(int currentPage)
+        {
+            try
+            {
+                _logger.LogInformation("Recebendo requisição para consulta de pedidos");
+                var result = await _orderService.GetAllOrdersAsync(currentPage);
+                return result.Status switch
+                {
+                    "success" => Ok(result),
+                    "not_found" => NotFound(result),
+                    "error" => StatusCode(500, result),
+                    _ => StatusCode(500, result)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro inesperado no endpoint de consulta de pedidos.");
+                return StatusCode(500, new
+                {
+                    Message = "Ocorreu um erro inesperado no servidor.",
+                    Status = "error"
+                });
+            }
+        }
     }
 }

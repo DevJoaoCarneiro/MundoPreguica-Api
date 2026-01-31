@@ -9,5 +9,7 @@ namespace Application.Interfaces
     public interface IOrderService {
 
         Task<OrderResponseDto> createNewOrderAsync(OrderRequestDto orderRequestDto);
+
+        Task<OrderResponseListDto> GetAllOrdersAsync(int currentPage);
     }
 }

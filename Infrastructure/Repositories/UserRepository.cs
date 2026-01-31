@@ -24,7 +24,7 @@ namespace Infrastructure.Repositories
                 await _context.SaveChangesAsync();
                 return user;
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 return null;
             }
