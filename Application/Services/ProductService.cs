@@ -108,19 +108,24 @@ namespace Application.Services
         {
             try
             {
+                int pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
+                int currentPage = filter.Page > 0 ? filter.Page : 1;
+
                 _logger.LogInformation("Buscando produtos filtrados e agrupando por nome.");
 
-                var products = await _productRepository.GetByFiltersAsync(
-                    filter.Name,
-                    filter.CategoryId,
-                    filter.Status,
-                    filter.Page,
-                    filter.Size);
+                var (products, totalItems) = await _productRepository.GetByFiltersAsync(
+                        filter.Name,
+                        filter.CategoryId,
+                        filter.Status,
+                        filter.Size,
+                        currentPage,
+                        pageSize);
 
                 var groupedList = products
                     .GroupBy(p => p.Name)
                     .Select(g => new DataResponse
                     {
+                        Id = g.First().Id,
                         Name = g.Key,
                         Category = g.First().Category?.Name ?? "Sem Categoria",
                         Price = g.First().Price,
@@ -140,6 +145,10 @@ namespace Application.Services
                 {
                     Message = groupedList.Any() ? "Products listed successfully" : "No products found",
                     Status = "success",
+                    TotalItems = totalItems,
+                    CurrentPage = currentPage,
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling((double)totalItems / pageSize),
                     DataList = groupedList
                 };
             }
@@ -214,6 +223,7 @@ namespace Application.Services
 
         public async Task<ProductResponseDto> updateProductById(Guid productId, ProductRequestDto productRequestDto)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 _logger.LogInformation("Iniciando atualização do produto ID: {ProductId}", productId);
@@ -231,55 +241,47 @@ namespace Application.Services
                     };
                 }
 
+                var allVariants = (await _productRepository.GetByNameAsync(existingProduct.Name)).ToList();
+
                 string imageUrl = existingProduct.ImageUrL;
-                if (productRequestDto.Image != null && productRequestDto.Image.Length > 0)
+                foreach (var p in allVariants)
                 {
-                    _logger.LogInformation("Nova imagem enviada. Fazendo upload...");
-                    existingProduct.ImageUrL = await _imageUploadService.UploadImageAsync(productRequestDto.Image);
-                }
+                    if (!string.IsNullOrWhiteSpace(productRequestDto.Name)) p.Name = productRequestDto.Name;
+                    if (productRequestDto.CategoryId > 0) p.CategoryId = productRequestDto.CategoryId;
+                    if (productRequestDto.Price > 0) p.Price = productRequestDto.Price;
+                    p.ImageUrL = imageUrl;
+                    p.UpdatedAt = DateTime.UtcNow;
+                    var variantUpdate = productRequestDto.Variant?
+                        .FirstOrDefault(v => (ProductSize)v.Size == p.Size);
 
-                if (!string.IsNullOrWhiteSpace(productRequestDto.Name))
-                    existingProduct.Name = productRequestDto.Name;
-
-                if (productRequestDto.CategoryId > 0)
-                    existingProduct.CategoryId = productRequestDto.CategoryId;
-
-                if (productRequestDto.Price > 0)
-                    existingProduct.Price = productRequestDto.Price;
-
-                //if (productRequestDto.Size > 0)
-                //    existingProduct.Size = (ProductSize)productRequestDto.Size;
-
-
-                existingProduct.UpdatedAt = DateTime.UtcNow;
-
-
-                var updatedProduct = await _productRepository.UpdateAsync(existingProduct);
-
-                if (updatedProduct == null)
-                {
-                    _logger.LogError("Erro ao persistir a atualização do produto {ProductId} no banco.", productId);
-                    return new ProductResponseDto
+                    if (variantUpdate != null)
                     {
-                        Message = "Erro ao persistir no banco",
-                        Status = "error",
-                        Data = null
-                    };
+                        p.Stock = variantUpdate.Stock;
+                    }
+
+                    await _productRepository.UpdateAsync(p);
                 }
 
-                _logger.LogInformation("Produto {ProductId} atualizado com sucesso!", productId);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
 
                 return new ProductResponseDto
                 {
-                    Message = "Product updated successfully",
+                    Message = "Grade atualizada com sucesso",
                     Status = "success",
                     Data = new Data
                     {
-                        Id = updatedProduct.Id,
-                        Name = updatedProduct.Name,
-                        Category = updatedProduct.CategoryId,
-                        Price = updatedProduct.Price,
-                        ImageUrL = updatedProduct.ImageUrL
+                        Id = existingProduct.Id,
+                        Name = allVariants.First().Name,
+                        Price = allVariants.First().Price,
+                        Category = allVariants.First().CategoryId,
+                        ImageUrL = imageUrl,
+                        Variants = allVariants.Select(v => new VariantInfoResponse
+                        {
+                            Id = v.Id,
+                            Size = v.Size.ToString(),
+                            Stock = v.Stock
+                        }).OrderBy(x => x.Size).ToList()
                     }
                 };
             }

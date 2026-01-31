@@ -37,12 +37,13 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<Product>> GetByFiltersAsync(
+        public async Task<(IEnumerable<Product> Products, int TotalCount)> GetByFiltersAsync(
             string? name,
             int? categoryId,
             ProductStatus? status,
+            ProductSize? size,
             int page,
-            ProductSize? size)
+            int pageSize = 10)
         {
             try
             {
@@ -64,14 +65,17 @@ namespace Infrastructure.Repositories
                 if (size.HasValue)
                     query = query.Where(p => p.Size == size.Value);
 
+                var totalCount = await query.CountAsync();
+
                 var products = await query
                     .OrderByDescending(p => p.CreatedAt)
-                    .Skip((page - 1) * 10)
-                    .Take(10)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .ToListAsync();
 
-                _logger.LogInformation("Consulta finalizada. {Count} produtos retornados do banco.", products.Count);
-                return products;
+                _logger.LogInformation("Consulta finalizada. {Count} produtos na página. Total no banco: {Total}", products.Count, totalCount);
+
+                return (products, totalCount);
             }
             catch (Exception ex)
             {

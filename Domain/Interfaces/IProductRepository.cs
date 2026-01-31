@@ -11,12 +11,13 @@ namespace Domain.Interfaces
     {
         Task<Product> AddAsync(Product product);
 
-        Task<IEnumerable<Product>> GetByFiltersAsync(
+        Task<(IEnumerable<Product> Products, int TotalCount)> GetByFiltersAsync(
             string? name,
             int? categoryId,
             ProductStatus? status,
+            ProductSize? size,
             int page,
-            ProductSize? size);
+            int pageSize);
 
         Task<Product> GetByIdAsync(Guid productId);
 
