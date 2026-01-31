@@ -100,6 +100,23 @@ namespace Api.Controller
                 return StatusCode(500, new { Message = "Erro interno no servidor.", Status = "error" });
             }
         }
+
+        [HttpPut]
+        [Route("{orderId}/return")]
+        public async Task<IActionResult> updateConsignedOrder([FromBody] SettleConsignmentRequestDto request)
+        {
+            _logger.LogInformation("Iniciando liquidação de consignado para o pedido: {Id}", request.OrderId);
+
+            var result = await _orderService.SettleConsignmentAsync(request);
+
+            return result.Status switch
+            {
+                "success" => Ok(result),
+                "not_found" => NotFound(result),
+                "invalid_argument" => BadRequest(result),
+                _ => StatusCode(500, result)
+            };
+        }
     }
 
 }

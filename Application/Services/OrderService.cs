@@ -2,17 +2,19 @@
 using Application.Request;
 using Application.Response;
 using Domain.Entities;
+using Domain.Entities.Enum;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Application.Services
 {
     public class OrderService : IOrderService
     {
-        public readonly ILogger<OrderService> _logger;
+        private readonly ILogger<OrderService> _logger;
         private readonly IClientRepository _clientRepository;
         private readonly IProductRepository _productRepository;
         private readonly IOrderRepository _orderRepository;
@@ -41,21 +43,16 @@ namespace Application.Services
             {
                 if (orderRequestDto == null || orderRequestDto.ProductInformation == null || !orderRequestDto.ProductInformation.Any())
                 {
-                    _logger.LogWarning("Tentativa de criar pedido com dados nulos ou sem itens.");
                     await _unitOfWork.RollbackTransactionAsync();
-                    return new OrderResponseDto
-                    {
+                    return new OrderResponseDto {
                         Message = "O pedido deve conter ao menos um item.",
-                        Status = "invalid_argument",
-                        Order = null
+                        Status = "invalid_argument" 
                     };
                 }
 
-                _logger.LogInformation("Processando pedido para o cliente: {CustomerName}", orderRequestDto.ClientInformation.Name);
                 var client = await _clientRepository.GetByPhoneAsync(orderRequestDto.ClientInformation.Phone);
                 if (client == null)
                 {
-                    _logger.LogInformation("Cliente novo. Cadastrando: {Phone}", orderRequestDto.ClientInformation.Phone);
                     client = new Client
                     {
                         clientId = Guid.NewGuid(),
@@ -71,6 +68,9 @@ namespace Application.Services
                     ClientId = client.clientId,
                     TypeOrder = orderRequestDto.OrderType,
                     OrderDate = DateTime.UtcNow,
+                    OrderStatus = (OrderType)orderRequestDto.OrderType == OrderType.Sale
+                                  ? OrderStatus.Finish
+                                  : OrderStatus.Delivered,
                     TotalValue = 0
                 };
 
@@ -83,13 +83,10 @@ namespace Application.Services
 
                     if (product == null || product.Stock < itemDto.Amount)
                     {
-                        _logger.LogWarning("Falha no estoque ou produto inexistente. ID: {ProductId}", itemDto.ProductId);
                         await _unitOfWork.RollbackTransactionAsync();
-                        return new OrderResponseDto
-                        {
-                            Message = $"Estoque insuficiente ou produto não encontrado: {itemDto.ProductId}",
-                            Status = "out_of_stock",
-                            Order = null
+                        return new OrderResponseDto {
+                            Message = "Estoque insuficiente ou produto inexistente.",
+                            Status = "out_of_stock" 
                         };
                     }
 
@@ -103,121 +100,60 @@ namespace Application.Services
                     };
 
                     totalOrderValue += (orderItem.UnitPrice * orderItem.Quantity);
-
                     product.Stock -= itemDto.Amount;
                     await _productRepository.UpdateAsync(product);
-
                     orderItems.Add(orderItem);
                 }
 
                 order.TotalValue = totalOrderValue;
                 order.Items = orderItems;
 
-                _logger.LogInformation("Salvando pedido. Total: {Total}", totalOrderValue);
                 await _orderRepository.AddAsync(order);
-
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
-
-                var orderDto = new ProductOrderDto
-                {
-                    OrderId = order.Id,
-                    CustomerName = client.clientName,
-                    CustomerPhone = client.clientPhone,
-                    TotalValue = order.TotalValue,
-                    Date = order.OrderDate,
-                    OrderStatus = "Finalizado",
-                    Items = order.Items.Select(i => new OrderItemSummaryDto
-                    {
-                        ProductName = i.Product?.Name ?? "Produto",
-                        Size = i.Product?.Size.ToString() ?? "-",
-                        Quantity = i.Quantity
-                    }).ToList()
-                };
 
                 return new OrderResponseDto
                 {
                     Message = "Pedido finalizado com sucesso!",
                     Status = "success",
-                    Order = orderDto
+                    Order = MapToProductOrderDto(order)
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro crítico ao processar o pedido.");
                 await _unitOfWork.RollbackTransactionAsync();
-                return new OrderResponseDto
-                {
-                    Message = "Erro interno ao processar pedido: " + ex.Message,
-                    Status = "error",
-                    Order = null
-                };
+                _logger.LogError(ex, "Erro crítico ao processar o pedido.");
+                return new OrderResponseDto {
+                    Message = "Erro interno: " + ex.Message,
+                    Status = "error" };
             }
-
         }
 
         public async Task<OrderResponseListDto> GetAllOrdersAsync(int page)
         {
             const int FixedPageSize = 10;
-
             try
             {
                 int currentPage = page > 0 ? page : 1;
-
-                _logger.LogInformation("Buscando pedidos paginados. Página: {Page}, Tamanho: {Size}", currentPage, FixedPageSize);
-
                 var (orders, totalItems) = await _orderRepository.GetAllPagedAsync(currentPage, FixedPageSize);
-
-                if (orders == null || !orders.Any())
-                {
-                    _logger.LogWarning("Nenhum pedido encontrado para os filtros aplicados.");
-                    return new OrderResponseListDto
-                    {
-                        Message = "Nenhum pedido encontrado.",
-                        Status = "success",
-                        TotalItems = 0,
-                        Orders = new List<ProductOrderDto>()
-                    };
-                }
-
-                var orderList = orders.Select(order => new ProductOrderDto
-                {
-                    OrderId = order.Id,
-                    CustomerName = order.Client?.clientName ?? "Cliente não identificado",
-                    CustomerPhone = order.Client?.clientPhone ?? "N/A",
-                    TotalValue = order.TotalValue,
-                    Date = order.OrderDate,
-                    OrderStatus = "Finalizado",
-                    Items = order.Items.Select(i => new OrderItemSummaryDto
-                    {
-                        ProductName = i.Product?.Name ?? "Produto Removido",
-                        Size = i.Product?.Size.ToString() ?? "-",
-                        Quantity = i.Quantity
-                    }).ToList()
-                }).ToList();
-
-                _logger.LogInformation("Recuperados {Count} pedidos de um total de {Total}.", orderList.Count, totalItems);
 
                 return new OrderResponseListDto
                 {
-                    Message = "Lista de pedidos recuperada com sucesso.",
+                    Message = "Lista recuperada com sucesso.",
                     Status = "success",
                     TotalItems = totalItems,
                     CurrentPage = currentPage,
                     PageSize = FixedPageSize,
                     TotalPages = (int)Math.Ceiling((double)totalItems / FixedPageSize),
-                    Orders = orderList
+                    Orders = orders.Select(MapToProductOrderDto).ToList()
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro fatal ao listar pedidos paginados.");
-
-                return new OrderResponseListDto
-                {
-                    Message = "Erro interno ao processar a lista de pedidos: " + ex.Message,
-                    Status = "error",
-                    Orders = new List<ProductOrderDto>()
+                _logger.LogError(ex, "Erro ao listar pedidos.");
+                return new OrderResponseListDto {
+                    Message = "Erro interno.",
+                    Status = "error" 
                 };
             }
         }
@@ -226,51 +162,111 @@ namespace Application.Services
         {
             try
             {
-                _logger.LogInformation("Buscando detalhes do pedido ID: {OrderId}", orderId);
-
                 var order = await _orderRepository.GetByIdAsync(orderId);
+                if (order == null) return new OrderResponseDto { Message = "Pedido não encontrado.", Status = "not_found" };
 
-                if (order == null)
-                {
-                    return new OrderResponseDto
-                    {
-                        Message = "Pedido não encontrado.",
-                        Status = "not_found"
-                    };
-                }
-
-                var orderDto = new ProductOrderDto
-                {
-                    OrderId = order.Id,
-                    CustomerName = order.Client?.clientName ?? "Cliente não identificado",
-                    CustomerPhone = order.Client?.clientPhone ?? "N/A",
-                    TotalValue = order.TotalValue,
-                    Date = order.OrderDate,
-                    OrderStatus = "Finalizado",
-                    Items = order.Items.Select(i => new OrderItemSummaryDto
-                    {
-                        ProductName = i.Product?.Name ?? "Produto Removido",
-                        Size = i.Product?.Size.ToString() ?? "-",
-                        Quantity = i.Quantity
-                    }).ToList()
-                };
-
-                return new OrderResponseDto
-                {
-                    Message = "Pedido encontrado com sucesso.",
-                    Status = "success",
-                    Order = orderDto
+                return new OrderResponseDto {
+                    Message = "Sucesso.",
+                    Status = "success", Order = MapToProductOrderDto(order) 
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar pedido {OrderId}.", orderId);
-                return new OrderResponseDto
-                {
-                    Message = "Erro interno: " + ex.Message,
+                _logger.LogError(ex, "Erro ao buscar pedido.");
+                return new OrderResponseDto {
+                    Message = "Erro interno.",
                     Status = "error"
                 };
             }
+        }
+
+        public async Task<OrderResponseDto> SettleConsignmentAsync(SettleConsignmentRequestDto request)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var order = await _orderRepository.GetByIdAsync(request.OrderId);
+                if (order == null || order.OrderStatus != OrderStatus.Delivered)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return new OrderResponseDto {
+                        Message = "Pedido inválido para liquidação.",
+                        Status = "invalid_operation" 
+                    };
+                }
+
+                decimal finalTotalValue = 0;
+
+                foreach (var settlement in request.ItemsSettlement)
+                {
+                    var orderItem = order.Items.FirstOrDefault(i => i.ProductId == settlement.ProductId);
+                    if (orderItem == null) continue;
+
+                    if (settlement.SoldAmount + settlement.ReturnedAmount != orderItem.Quantity)
+                    {
+                        await _unitOfWork.RollbackTransactionAsync();
+                        return new OrderResponseDto {
+                            Status = "invalid_argument",
+                            Message = "As quantidades não batem." 
+                        };
+                    }
+
+                    if (settlement.ReturnedAmount > 0)
+                    {
+                        var product = await _productRepository.GetByIdAsync(settlement.ProductId);
+                        if (product != null)
+                        {
+                            product.Stock += settlement.ReturnedAmount;
+                            await _productRepository.UpdateAsync(product);
+                        }
+                    }
+
+                    orderItem.Quantity = settlement.SoldAmount;
+                    finalTotalValue += (orderItem.UnitPrice * settlement.SoldAmount);
+                }
+
+                order.TotalValue = finalTotalValue;
+                order.OrderStatus = OrderStatus.Finish;
+
+                await _orderRepository.UpdateAsync(order);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                return new OrderResponseDto
+                {
+                    Message = "Liquidação concluída.",
+                    Status = "success",
+                    Order = MapToProductOrderDto(order)
+                };
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                _logger.LogError(ex, "Erro ao liquidar pedido.");
+                return new OrderResponseDto {
+                    Message = "Erro interno.",
+                    Status = "error" 
+                };
+            }
+        }
+
+        private ProductOrderDto MapToProductOrderDto(Order order)
+        {
+            return new ProductOrderDto
+            {
+                OrderId = order.Id,
+                CustomerName = order.Client?.clientName ?? "Cliente não identificado",
+                CustomerPhone = order.Client?.clientPhone ?? "N/A",
+                TotalValue = order.TotalValue,
+                Date = order.OrderDate,
+                OrderStatus = order.OrderStatus.ToString(),
+                Items = order.Items?.Select(i => new OrderItemSummaryDto
+                {
+                    ProductName = i.Product?.Name ?? "Produto Removido",
+                    Size = i.Product?.Size.ToString() ?? "-",
+                    Quantity = i.Quantity
+                }).ToList() ?? new List<OrderItemSummaryDto>()
+            };
         }
     }
 }

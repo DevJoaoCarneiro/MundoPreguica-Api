@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Domain.Entities.Enum;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,7 +8,7 @@ namespace Application.Request
 {
     public class OrderRequestDto
     {
-        public int OrderType { get; set; }
+        public OrderType OrderType { get; set; }
 
         public ClientRequest ClientInformation { get; set; } = new ClientRequest();
 

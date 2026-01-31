@@ -8,7 +8,7 @@ namespace Infrastructure.Persistence
     {
         public void Configure(EntityTypeBuilder<Order> builder)
         {
-            builder.ToTable("Orders");
+            builder.ToTable("orders");
 
             builder.HasKey(o => o.Id);
 
@@ -16,6 +16,11 @@ namespace Infrastructure.Persistence
                 .IsRequired();
 
             builder.Property(o => o.TypeOrder)
+                .HasConversion<int>()
+                .IsRequired();
+
+            builder.Property(o => o.OrderStatus)
+                .HasConversion<int>()
                 .IsRequired();
 
             builder.Property(o => o.TotalValue)
@@ -27,6 +32,10 @@ namespace Infrastructure.Persistence
                 .HasForeignKey(o => o.ClientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasMany(o => o.Items)
+                .WithOne()
+                .HasForeignKey(i => i.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

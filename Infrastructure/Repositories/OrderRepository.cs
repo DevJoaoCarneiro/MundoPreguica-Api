@@ -52,8 +52,13 @@ namespace Infrastructure.Repositories
                 .Include(o => o.Client)
                 .Include(o => o.Items)
                     .ThenInclude(i => i.Product)
-                .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.Id == orderId);
+        }
+
+        public async Task UpdateAsync(Order order)
+        {
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
         }
     }
 }

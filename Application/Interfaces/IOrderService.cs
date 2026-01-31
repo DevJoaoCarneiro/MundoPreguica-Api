@@ -13,5 +13,7 @@ namespace Application.Interfaces
         Task<OrderResponseListDto> GetAllOrdersAsync(int currentPage);
 
         Task<OrderResponseDto> GetOrderByIdAsync(Guid orderId);
+
+        Task<OrderResponseDto> SettleConsignmentAsync(SettleConsignmentRequestDto request);
     }
 }
