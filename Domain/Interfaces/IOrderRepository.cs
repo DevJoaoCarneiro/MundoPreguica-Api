@@ -10,5 +10,7 @@ namespace Domain.Interfaces
         Task<Order> AddAsync(Order product);
 
         Task<(IEnumerable<Order> Orders, int TotalCount)> GetAllPagedAsync(int page, int pageSize);
+
+        Task<Order?> GetByIdAsync(Guid orderId);
     }
 }

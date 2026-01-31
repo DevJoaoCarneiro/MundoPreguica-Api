@@ -1,6 +1,9 @@
 ﻿using Application.Interfaces;
 using Application.Request;
+using Application.Services;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Api.Controller
 {
@@ -74,5 +77,29 @@ namespace Api.Controller
                 });
             }
         }
+        [HttpGet]
+        [Route("{orderId}")]
+        public async Task<IActionResult> getOrderById([FromRoute] Guid orderId)
+        {
+            try
+            {
+                _logger.LogInformation("Consultando pedido ID: {OrderId}", orderId);
+                var result = await _orderService.GetOrderByIdAsync(orderId);
+
+                return result.Status switch
+                {
+                    "success" => Ok(result),
+                    "not_found" => NotFound(result),
+                    "error" => StatusCode(500, result),
+                    _ => StatusCode(500, result)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro na consulta do pedido ID: {OrderId}", orderId);
+                return StatusCode(500, new { Message = "Erro interno no servidor.", Status = "error" });
+            }
+        }
     }
+
 }

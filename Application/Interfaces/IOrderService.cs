@@ -11,5 +11,7 @@ namespace Application.Interfaces
         Task<OrderResponseDto> createNewOrderAsync(OrderRequestDto orderRequestDto);
 
         Task<OrderResponseListDto> GetAllOrdersAsync(int currentPage);
+
+        Task<OrderResponseDto> GetOrderByIdAsync(Guid orderId);
     }
 }

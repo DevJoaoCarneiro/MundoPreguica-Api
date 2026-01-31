@@ -10,5 +10,7 @@ namespace Application.Response
 
         public string Status { get; set; } = string.Empty;
 
+        public ProductOrderDto? Order { get; set; } = new ProductOrderDto();
     }
+
 }

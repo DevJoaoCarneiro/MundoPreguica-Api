@@ -39,8 +39,6 @@ namespace Application.Services
 
             try
             {
-                _logger.LogInformation("Iniciando processamento de novo pedido para o cliente: {CustomerName}", orderRequestDto?.ClientInformation.Name);
-
                 if (orderRequestDto == null || orderRequestDto.ProductInformation == null || !orderRequestDto.ProductInformation.Any())
                 {
                     _logger.LogWarning("Tentativa de criar pedido com dados nulos ou sem itens.");
@@ -48,14 +46,16 @@ namespace Application.Services
                     return new OrderResponseDto
                     {
                         Message = "O pedido deve conter ao menos um item.",
-                        Status = "invalid_argument"
+                        Status = "invalid_argument",
+                        Order = null
                     };
                 }
 
+                _logger.LogInformation("Processando pedido para o cliente: {CustomerName}", orderRequestDto.ClientInformation.Name);
                 var client = await _clientRepository.GetByPhoneAsync(orderRequestDto.ClientInformation.Phone);
                 if (client == null)
                 {
-                    _logger.LogInformation("Cliente não encontrado. Criando novo cadastro para: {Phone}", orderRequestDto.ClientInformation.Phone);
+                    _logger.LogInformation("Cliente novo. Cadastrando: {Phone}", orderRequestDto.ClientInformation.Phone);
                     client = new Client
                     {
                         clientId = Guid.NewGuid(),
@@ -87,8 +87,9 @@ namespace Application.Services
                         await _unitOfWork.RollbackTransactionAsync();
                         return new OrderResponseDto
                         {
-                            Message = $"Estoque insuficiente ou produto não encontrado para o ID: {itemDto.ProductId}",
-                            Status = "out_of_stock"
+                            Message = $"Estoque insuficiente ou produto não encontrado: {itemDto.ProductId}",
+                            Status = "out_of_stock",
+                            Order = null
                         };
                     }
 
@@ -112,16 +113,33 @@ namespace Application.Services
                 order.TotalValue = totalOrderValue;
                 order.Items = orderItems;
 
-                _logger.LogInformation("Salvando pedido no banco. Total: {Total}", totalOrderValue);
-                var savedOrder = await _orderRepository.AddAsync(order);
+                _logger.LogInformation("Salvando pedido. Total: {Total}", totalOrderValue);
+                await _orderRepository.AddAsync(order);
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
+                var orderDto = new ProductOrderDto
+                {
+                    OrderId = order.Id,
+                    CustomerName = client.clientName,
+                    CustomerPhone = client.clientPhone,
+                    TotalValue = order.TotalValue,
+                    Date = order.OrderDate,
+                    OrderStatus = "Finalizado",
+                    Items = order.Items.Select(i => new OrderItemSummaryDto
+                    {
+                        ProductName = i.Product?.Name ?? "Produto",
+                        Size = i.Product?.Size.ToString() ?? "-",
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+
                 return new OrderResponseDto
                 {
                     Message = "Pedido finalizado com sucesso!",
-                    Status = "success"
+                    Status = "success",
+                    Order = orderDto
                 };
             }
             catch (Exception ex)
@@ -131,7 +149,8 @@ namespace Application.Services
                 return new OrderResponseDto
                 {
                     Message = "Erro interno ao processar pedido: " + ex.Message,
-                    Status = "error"
+                    Status = "error",
+                    Order = null
                 };
             }
 
@@ -199,6 +218,57 @@ namespace Application.Services
                     Message = "Erro interno ao processar a lista de pedidos: " + ex.Message,
                     Status = "error",
                     Orders = new List<ProductOrderDto>()
+                };
+            }
+        }
+
+        public async Task<OrderResponseDto> GetOrderByIdAsync(Guid orderId)
+        {
+            try
+            {
+                _logger.LogInformation("Buscando detalhes do pedido ID: {OrderId}", orderId);
+
+                var order = await _orderRepository.GetByIdAsync(orderId);
+
+                if (order == null)
+                {
+                    return new OrderResponseDto
+                    {
+                        Message = "Pedido não encontrado.",
+                        Status = "not_found"
+                    };
+                }
+
+                var orderDto = new ProductOrderDto
+                {
+                    OrderId = order.Id,
+                    CustomerName = order.Client?.clientName ?? "Cliente não identificado",
+                    CustomerPhone = order.Client?.clientPhone ?? "N/A",
+                    TotalValue = order.TotalValue,
+                    Date = order.OrderDate,
+                    OrderStatus = "Finalizado",
+                    Items = order.Items.Select(i => new OrderItemSummaryDto
+                    {
+                        ProductName = i.Product?.Name ?? "Produto Removido",
+                        Size = i.Product?.Size.ToString() ?? "-",
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+
+                return new OrderResponseDto
+                {
+                    Message = "Pedido encontrado com sucesso.",
+                    Status = "success",
+                    Order = orderDto
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao buscar pedido {OrderId}.", orderId);
+                return new OrderResponseDto
+                {
+                    Message = "Erro interno: " + ex.Message,
+                    Status = "error"
                 };
             }
         }
