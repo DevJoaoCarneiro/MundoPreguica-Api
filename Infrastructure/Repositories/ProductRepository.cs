@@ -112,5 +112,12 @@ namespace Infrastructure.Repositories
                 return null;
             }
         }
+
+        public async Task<IEnumerable<Product>> GetByNameAsync(string name)
+        {
+            return await _context.Products
+                .Where(p => p.Name.ToLower() == name.ToLower())
+                .ToListAsync();
+        }
     }
 }

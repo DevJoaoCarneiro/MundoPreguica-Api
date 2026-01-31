@@ -5,12 +5,6 @@ using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Runtime.Intrinsics.X86;
-using System.Text;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Application.Services
 {
@@ -18,20 +12,24 @@ namespace Application.Services
     {
         private readonly IProductRepository _productRepository;
         private readonly IImageUploadService _imageUploadService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ProductService> _logger;
 
-        public ProductService(IProductRepository productRepository, IImageUploadService imageUploadService, ILogger<ProductService> logger)
+        public ProductService(IProductRepository productRepository, IImageUploadService imageUploadService, IUnitOfWork unitOfWork, ILogger<ProductService> logger)
         {
             _productRepository = productRepository;
             _imageUploadService = imageUploadService;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
-        public async Task<ProductResponseDto> createNewProduct(ProductRequestDto productRequestDto)
+        public async Task<ProductResponseDto> CreateNewProduct(ProductRequestDto productRequestDto)
         {
+            await _unitOfWork.BeginTransactionAsync();
+
             try
             {
-                if (productRequestDto == null)
+                if (productRequestDto == null || !productRequestDto.Variant.Any())
                 {
                     _logger.LogInformation("Parametros null ou vazio");
                     return new ProductResponseDto
@@ -44,7 +42,7 @@ namespace Application.Services
 
                 var imageUrl = await _imageUploadService.UploadImageAsync(productRequestDto.Image);
 
-                if (imageUrl == null)
+                if (string.IsNullOrEmpty(imageUrl))
                 {
                     _logger.LogWarning("Falha no upload da imagem para o produto: {ProductName}", productRequestDto.Name);
                     return new ProductResponseDto
@@ -56,61 +54,51 @@ namespace Application.Services
                 }
 
 
-                var newProduct = new Product
-                {
-                    Id = Guid.NewGuid(),
-                    Name = productRequestDto.Name,
-                    CategoryId = productRequestDto.CategoryId,
-                    Price = productRequestDto.Price,
-                    ImageUrL = imageUrl,
-                    Size = (ProductSize)productRequestDto.Size,
-                    Status = ProductStatus.Available,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
+                var createdProducts = new List<Product>();
 
-                _logger.LogInformation("Salvando novo produto no banco de dados. ID: {ProductId}", newProduct.Id);
-                var savedProduct = await _productRepository.AddAsync(newProduct);
-
-                if (savedProduct == null)
+                foreach (var variant in productRequestDto.Variant)
                 {
-                    _logger.LogError("Erro ao persistir no banco.", newProduct.Id);
-                    return new ProductResponseDto
+                    var newProduct = new Product
                     {
-                        Message = "Erro ao persistir no banco",
-                        Status = "error",
-                        Data = null
+                        Id = Guid.NewGuid(),
+                        Name = productRequestDto.Name,
+                        CategoryId = productRequestDto.CategoryId,
+                        Price = productRequestDto.Price,
+                        ImageUrL = imageUrl,
+                        Size = (ProductSize)variant.Size,
+                        Stock = variant.Stock,
+                        Status = ProductStatus.Available,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
                     };
+
+                    await _productRepository.AddAsync(newProduct);
+                    createdProducts.Add(newProduct);
                 }
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
 
+                _logger.LogInformation("Grade do produto {ProductName} criada com {Count} variações.", productRequestDto.Name, createdProducts.Count);
 
-                _logger.LogInformation("Produto {ProductName} criado com sucesso!", newProduct.Name);
                 return new ProductResponseDto
                 {
-                    Message = "Product created successfully",
+                    Message = "Product grade created successfully",
                     Status = "success",
                     Data = new Data
                     {
-                        Id = newProduct.Id,
-                        Name = newProduct.Name,
-                        Category = newProduct.CategoryId,
-                        Size = newProduct.Size.ToString(),
-                        Price = newProduct.Price,
-                        ImageUrL = newProduct.ImageUrL
+                        Id = createdProducts.First().Id,
+                        Name = productRequestDto.Name,
+                        Price = productRequestDto.Price,
+                        Category = productRequestDto.CategoryId,
+                        ImageUrL = imageUrl,
                     }
                 };
-
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro inesperado ao criar o produto: {ProductName}", productRequestDto?.Name);
-
-                return new ProductResponseDto
-                {
-                    Message = "Error while is creating a product.: " + ex.Message,
-                    Status = "error",
-                    Data = null
-                };
+                await _unitOfWork.RollbackTransactionAsync();
+                _logger.LogError(ex, "Erro ao criar grade de produtos.");
+                return new ProductResponseDto { Message = "Internal Error: " + ex.Message, Status = "error" };
             }
 
 
@@ -120,7 +108,8 @@ namespace Application.Services
         {
             try
             {
-                _logger.LogInformation("Iniciando busca filtrada de produtos");
+                _logger.LogInformation("Buscando produtos filtrados e agrupando por nome.");
+
                 var products = await _productRepository.GetByFiltersAsync(
                     filter.Name,
                     filter.CategoryId,
@@ -128,34 +117,39 @@ namespace Application.Services
                     filter.Page,
                     filter.Size);
 
-                var productList = products.Select(p => new DataResponse
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Category = p.Category?.Name ?? "Sem Categoria",
-                    Size = p.Size.ToString(),
-                    Status = p.Status.ToString(),
-                    Price = p.Price,
-                    ImageUrL = p.ImageUrL
-                }).ToList();
+                var groupedList = products
+                    .GroupBy(p => p.Name)
+                    .Select(g => new DataResponse
+                    {
+                        Name = g.Key,
+                        Category = g.First().Category?.Name ?? "Sem Categoria",
+                        Price = g.First().Price,
+                        ImageUrL = g.First().ImageUrL,
+                        Status = g.First().Status.ToString(),
+                        Variants = g.Select(v => new VariantInfo
+                        {
+                            Id = v.Id,
+                            Size = v.Size.ToString(),
+                            Stock = v.Stock
+                        }).OrderBy(v => v.Size).ToList()
+                    }).ToList();
 
-                _logger.LogInformation("Busca finalizada. Quantidade de produtos encontrados: {Count}", productList.Count);
+                _logger.LogInformation("Busca finalizada. Modelos encontrados: {Count}", groupedList.Count);
 
                 return new FilterProductResponse
                 {
-                    Message = productList.Any() ? "Produtos listados com sucesso" : "Nenhum produto encontrado",
+                    Message = groupedList.Any() ? "Products listed successfully" : "No products found",
                     Status = "success",
-                    DataList = productList
+                    DataList = groupedList
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao processar consulta filtrada de produtos.");
+                _logger.LogError(ex, "Erro na listagem agrupada de produtos.");
                 return new FilterProductResponse
                 {
-                    Message = "Erro ao processar consulta: " + ex.Message,
-                    Status = "error",
-                    DataList = null
+                    Message = "Erro interno: " + ex.Message,
+                    Status = "error"
                 };
             }
         }
@@ -164,43 +158,53 @@ namespace Application.Services
         {
             try
             {
-                _logger.LogInformation("Iniciando busca de produto por ID: {ProductId}", productId);
+                _logger.LogInformation("Iniciando busca detalhada do modelo para o produto ID: {ProductId}", productId);
 
-                var product = await _productRepository.GetByIdAsync(productId);
+                var productVariant = await _productRepository.GetByIdAsync(productId);
 
-                if (product == null)
+                if (productVariant == null)
                 {
-                    _logger.LogInformation("Produto não encontrado");
+                    _logger.LogInformation("Produto ID {ProductId} não encontrado.", productId);
                     return new ProductResponseDto
                     {
-                        Message = "Produto não encontrado ou não existente",
+                        Message = "Produto não encontrado",
                         Status = "not_found",
                         Data = null
                     };
                 }
 
-                _logger.LogInformation("Produto encontrado: {ProductName}", product.Name);
+                var allVariants = await _productRepository.GetByNameAsync(productVariant.Name);
+
+                _logger.LogInformation("Modelo encontrado: {ProductName}. Variações identificadas: {Count}",
+                    productVariant.Name, allVariants.Count());
+
                 return new ProductResponseDto
                 {
                     Message = "Produto encontrado com sucesso",
                     Status = "success",
                     Data = new Data
                     {
-                        Id = product.Id,
-                        Name = product.Name,
-                        Category = product.CategoryId,
-                        Size = product.Size.ToString(),
-                        Price = product.Price,
-                        ImageUrL = product.ImageUrL
+                        Id = productVariant.Id,
+                        Name = productVariant.Name,
+                        Category = productVariant.CategoryId,
+                        Price = productVariant.Price,
+                        ImageUrL = productVariant.ImageUrL,
+
+                        Variants = allVariants.Select(v => new VariantInfoResponse
+                        {
+                            Id = v.Id,
+                            Size = v.Size.ToString(),
+                            Stock = v.Stock
+                        }).OrderBy(v => v.Size).ToList()
                     }
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao processar consulta filtrada de produtos.");
+                _logger.LogError(ex, "Erro ao buscar detalhes do produto {ProductId}.", productId);
                 return new ProductResponseDto
                 {
-                    Message = "Erro ao processar consulta: " + ex.Message,
+                    Message = "Erro interno: " + ex.Message,
                     Status = "error",
                     Data = null
                 };
@@ -243,8 +247,8 @@ namespace Application.Services
                 if (productRequestDto.Price > 0)
                     existingProduct.Price = productRequestDto.Price;
 
-                if (productRequestDto.Size > 0)
-                    existingProduct.Size = (ProductSize)productRequestDto.Size;
+                //if (productRequestDto.Size > 0)
+                //    existingProduct.Size = (ProductSize)productRequestDto.Size;
 
 
                 existingProduct.UpdatedAt = DateTime.UtcNow;
@@ -274,7 +278,6 @@ namespace Application.Services
                         Id = updatedProduct.Id,
                         Name = updatedProduct.Name,
                         Category = updatedProduct.CategoryId,
-                        Size = updatedProduct.Size.ToString(),
                         Price = updatedProduct.Price,
                         ImageUrL = updatedProduct.ImageUrL
                     }

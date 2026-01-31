@@ -10,7 +10,7 @@ namespace Application.Interfaces
 {
     public interface IProductServices
     {
-        Task<ProductResponseDto> createNewProduct(ProductRequestDto productRequestDto);
+        Task<ProductResponseDto> CreateNewProduct(ProductRequestDto productRequestDto);
 
         Task<FilterProductResponse> GetByFiltersAsync(ProductFilterRequest filter);
 

@@ -1,9 +1,4 @@
-﻿using Domain.Entities.Enum;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Application.Response
+﻿namespace Application.Response
 {
     public class ProductResponseDto
     {
@@ -11,7 +6,7 @@ namespace Application.Response
 
         public string Status { get; set; } = string.Empty;
 
-        public Data? Data { get; set; } = new Data();
+        public Data? Data { get; set; }
 
     }
 
@@ -20,9 +15,17 @@ namespace Application.Response
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public int Category { get; set; }
-
-        public string Size { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public string ImageUrL { get; set; } = string.Empty;
+
+        public List<VariantInfoResponse> Variants { get; set; } = new List<VariantInfoResponse>();
     }
+
+    public class VariantInfoResponse
+    {
+        public Guid Id { get; set; }
+        public string Size { get; set; } = string.Empty;
+        public int Stock { get; set; }
+    }
+
 }

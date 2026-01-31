@@ -22,6 +22,8 @@ namespace Domain.Interfaces
 
         Task<Product>UpdateAsync(Product product);
 
+        Task<IEnumerable<Product>> GetByNameAsync(string name);
+
 
     }
 }

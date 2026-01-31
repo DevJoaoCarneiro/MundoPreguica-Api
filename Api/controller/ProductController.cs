@@ -27,7 +27,7 @@ namespace Api.controller
             {
                 _logger.LogInformation("Começando o cadastro de produto..", productRequestDto.Name);
 
-                var result = await _productServices.createNewProduct(productRequestDto);
+                var result = await _productServices.CreateNewProduct(productRequestDto);
 
                 return result.Status switch
                 {
