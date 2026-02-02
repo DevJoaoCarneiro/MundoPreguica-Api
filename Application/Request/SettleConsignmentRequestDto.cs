@@ -6,9 +6,6 @@ namespace Application.Request
 {
     public class SettleConsignmentRequestDto
     {
-        [Required(ErrorMessage = "O ID do pedido é obrigatório.")]
-        public Guid OrderId { get; set; }
-
         public List<ItemSettlementDto> ItemsSettlement { get; set; } = new();
     }
 

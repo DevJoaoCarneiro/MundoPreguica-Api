@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260131152807_AlterandoFkTabelaOrder")]
-    partial class AlterandoFkTabelaOrder
+    [Migration("20260202025523_AlterandoNomeTabela")]
+    partial class AlterandoNomeTabela
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

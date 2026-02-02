@@ -180,12 +180,12 @@ namespace Application.Services
             }
         }
 
-        public async Task<OrderResponseDto> SettleConsignmentAsync(SettleConsignmentRequestDto request)
+        public async Task<OrderResponseDto> SettleConsignmentAsync(Guid orderId, SettleConsignmentRequestDto request)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var order = await _orderRepository.GetByIdAsync(request.OrderId);
+                var order = await _orderRepository.GetByIdAsync(orderId);
                 if (order == null || order.OrderStatus != OrderStatus.Delivered)
                 {
                     await _unitOfWork.RollbackTransactionAsync();

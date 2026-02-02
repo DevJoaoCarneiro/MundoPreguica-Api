@@ -14,6 +14,6 @@ namespace Application.Interfaces
 
         Task<OrderResponseDto> GetOrderByIdAsync(Guid orderId);
 
-        Task<OrderResponseDto> SettleConsignmentAsync(SettleConsignmentRequestDto request);
+        Task<OrderResponseDto> SettleConsignmentAsync(Guid orderId, SettleConsignmentRequestDto request);
     }
 }

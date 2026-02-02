@@ -103,11 +103,11 @@ namespace Api.Controller
 
         [HttpPut]
         [Route("{orderId}/return")]
-        public async Task<IActionResult> updateConsignedOrder([FromBody] SettleConsignmentRequestDto request)
+        public async Task<IActionResult> updateConsignedOrder([FromRoute] Guid orderId, [FromBody] SettleConsignmentRequestDto request)
         {
-            _logger.LogInformation("Iniciando liquidação de consignado para o pedido: {Id}", request.OrderId);
+            _logger.LogInformation("Iniciando liquidação de consignado para o pedido: {Id}", orderId);
 
-            var result = await _orderService.SettleConsignmentAsync(request);
+            var result = await _orderService.SettleConsignmentAsync(orderId, request);
 
             return result.Status switch
             {

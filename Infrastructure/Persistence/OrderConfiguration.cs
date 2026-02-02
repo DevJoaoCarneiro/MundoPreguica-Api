@@ -8,7 +8,7 @@ namespace Infrastructure.Persistence
     {
         public void Configure(EntityTypeBuilder<Order> builder)
         {
-            builder.ToTable("orders");
+            builder.ToTable("Orders");
 
             builder.HasKey(o => o.Id);
 
