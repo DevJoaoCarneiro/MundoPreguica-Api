@@ -29,12 +29,29 @@ namespace Application.Services
 
             try
             {
-                if (productRequestDto == null || !productRequestDto.Variant.Any())
+                if (productRequestDto == null || productRequestDto.Variant == null || !productRequestDto.Variant.Any())
                 {
                     _logger.LogInformation("Parametros null ou vazio");
                     return new ProductResponseDto
                     {
                         Message = "Parameters is empty or null",
+                        Status = "invalid_argument",
+                        Data = null
+                    };
+                }
+
+                var duplicateSizes = productRequestDto.Variant
+                    .GroupBy(v => v.Size)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key)
+                    .ToList();
+
+                if (duplicateSizes.Any())
+                {
+                    _logger.LogWarning("Tamanhos duplicados na requisição: {Sizes}", string.Join(",", duplicateSizes));
+                    return new ProductResponseDto
+                    {
+                        Message = "Duplicate sizes in request",
                         Status = "invalid_argument",
                         Data = null
                     };
@@ -53,6 +70,20 @@ namespace Application.Services
                     };
                 }
 
+                var existingVariants = (await _productRepository.GetByNameAsync(productRequestDto.Name)).ToList();
+                var existingSizes = existingVariants.Select(v => (int)v.Size).ToHashSet();
+                var requestedSizes = productRequestDto.Variant.Select(v => v.Size).ToList();
+
+                if (requestedSizes.Any(s => existingSizes.Contains(s)))
+                {
+                    _logger.LogWarning("Tentativa de criar tamanhos já existentes para o produto: {ProductName}", productRequestDto.Name);
+                    return new ProductResponseDto
+                    {
+                        Message = "Size already exists for this product",
+                        Status = "invalid_argument",
+                        Data = null
+                    };
+                }
 
                 var createdProducts = new List<Product>();
 
@@ -243,15 +274,46 @@ namespace Application.Services
 
                 var allVariants = (await _productRepository.GetByNameAsync(existingProduct.Name)).ToList();
 
+                var newName = string.IsNullOrWhiteSpace(productRequestDto.Name) ? existingProduct.Name : productRequestDto.Name;
+                var newCategoryId = productRequestDto.CategoryId > 0 ? productRequestDto.CategoryId : existingProduct.CategoryId;
+                var newPrice = productRequestDto.Price > 0 ? productRequestDto.Price : existingProduct.Price;
+
                 string imageUrl = existingProduct.ImageUrL;
+                if (productRequestDto.Image != null)
+                {
+                    var uploadedUrl = await _imageUploadService.UploadImageAsync(productRequestDto.Image);
+                    if (!string.IsNullOrEmpty(uploadedUrl))
+                    {
+                        imageUrl = uploadedUrl;
+                    }
+                }
+
+                var requestedVariants = productRequestDto.Variant ?? new List<ProductVariantRequest>();
+                var duplicateSizes = requestedVariants
+                    .GroupBy(v => v.Size)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key)
+                    .ToList();
+
+                if (duplicateSizes.Any())
+                {
+                    _logger.LogWarning("Tamanhos duplicados na requisição: {Sizes}", string.Join(",", duplicateSizes));
+                    return new ProductResponseDto
+                    {
+                        Message = "Duplicate sizes in request",
+                        Status = "invalid_argument",
+                        Data = null
+                    };
+                }
+
                 foreach (var p in allVariants)
                 {
-                    if (!string.IsNullOrWhiteSpace(productRequestDto.Name)) p.Name = productRequestDto.Name;
-                    if (productRequestDto.CategoryId > 0) p.CategoryId = productRequestDto.CategoryId;
-                    if (productRequestDto.Price > 0) p.Price = productRequestDto.Price;
+                    p.Name = newName;
+                    p.CategoryId = newCategoryId;
+                    p.Price = newPrice;
                     p.ImageUrL = imageUrl;
                     p.UpdatedAt = DateTime.UtcNow;
-                    var variantUpdate = productRequestDto.Variant?
+                    var variantUpdate = requestedVariants
                         .FirstOrDefault(v => (ProductSize)v.Size == p.Size);
 
                     if (variantUpdate != null)
@@ -260,6 +322,31 @@ namespace Application.Services
                     }
 
                     await _productRepository.UpdateAsync(p);
+                }
+
+                foreach (var variant in requestedVariants)
+                {
+                    if (allVariants.Any(v => (int)v.Size == variant.Size))
+                    {
+                        continue;
+                    }
+
+                    var newVariant = new Product
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = newName,
+                        CategoryId = newCategoryId,
+                        Price = newPrice,
+                        ImageUrL = imageUrl,
+                        Size = (ProductSize)variant.Size,
+                        Stock = variant.Stock,
+                        Status = existingProduct.Status,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    await _productRepository.AddAsync(newVariant);
+                    allVariants.Add(newVariant);
                 }
 
                 await _unitOfWork.CommitAsync();
@@ -287,6 +374,7 @@ namespace Application.Services
             }
             catch (Exception ex)
             {
+                await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Erro inesperado ao editar o produto: {ProductId}", productId);
                 return new ProductResponseDto
                 {
