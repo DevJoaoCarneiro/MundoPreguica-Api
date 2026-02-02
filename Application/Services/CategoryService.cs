@@ -1,10 +1,8 @@
 ﻿using Application.Interfaces;
 using Application.Response;
+using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Application.Services
 {
@@ -12,15 +10,80 @@ namespace Application.Services
     {
         private readonly ILogger<CategoryService> _logger;
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CategoryService(ILogger<CategoryService> logger, ICategoryRepository categoryRepository)
+        public CategoryService(ILogger<CategoryService> logger, ICategoryRepository categoryRepository, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _categoryRepository = categoryRepository;
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<CategoryResponseDto> CreateCategoryAsync(string name)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(name) && name == null)
+                {
+                    _logger.LogWarning("Nome da categoria nulo ou vazio");
+                    return new CategoryResponseDto
+                    {
+                        Message = "Nome da categoria invalido",
+                        Status = "invalid_argument",
+                        CategoryName = string.Empty
+                    };
+                }
+
+
+                var categoryExists = await _categoryRepository.CategoryExistsAsync(name);
+
+                if (categoryExists)
+                {
+                    _logger.LogWarning("Categoria já existe no banco de dados: {CategoryName}", name);
+                    return new CategoryResponseDto
+                    {
+                        Message = "Categoria já existe",
+                        Status = "conflict",
+                        CategoryName = name
+                    };
+                }
+
+                _logger.LogInformation("Criando nova categoria: {CategoryName}", name);
+                var newCategory = new Category
+                {
+                    Name = name,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _categoryRepository.AddCategoryAsync(newCategory);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                _logger.LogInformation("Categoria criada com sucesso: {CategoryName}", name);
+                return new CategoryResponseDto
+                {
+                    Message = "Categoria criada com sucesso",
+                    Status = "success",
+                    CategoryName = name
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro inesperado ao criar categoria na Service.");
+                await _unitOfWork.RollbackTransactionAsync();
+                return new CategoryResponseDto
+                {
+                    Message = "Erro ao criar categoria: " + ex.Message,
+                    Status = "error",
+                    CategoryName = string.Empty
+                };
+            }
+
         }
 
         public async Task<CategoryResponseDto> GetAllCategoriesAsync()
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 _logger.LogInformation("Iniciando serviço para buscar todas as categorias.");
@@ -58,6 +121,8 @@ namespace Application.Services
                 };
             }
         }
+
+
 
     }
 }

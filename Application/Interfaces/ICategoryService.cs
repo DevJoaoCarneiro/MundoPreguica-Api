@@ -8,5 +8,7 @@ namespace Application.Interfaces
     public interface ICategoryService
     {
         Task<CategoryResponseDto> GetAllCategoriesAsync();
+
+        Task<CategoryResponseDto> CreateCategoryAsync(string name);
     }
 }
