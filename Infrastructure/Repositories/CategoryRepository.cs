@@ -39,17 +39,27 @@ namespace Infrastructure.Repositories
             }
         }
 
+        public async Task AddCategoryAsync(Category category)
+        {
+            await _context.Category.AddAsync(category);
+        }
+
         public async Task<bool> CategoryExistsAsync(string name)
         {
             return await _context.Category
                 .AnyAsync(c => c.Name.ToLower() == name.ToLower());
         }
 
-        public async Task AddCategoryAsync(Category category)
+        public async Task<Category?> GetByIdAsync(int id)
         {
-                await _context.Category.AddAsync(category);
-            
+            return await _context.Category.FindAsync(id);
         }
+
+        public void Delete(Category category)
+        {
+            _context.Category.Remove(category);
+        }
+
 
     }
 }

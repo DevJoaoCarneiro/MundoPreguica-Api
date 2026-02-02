@@ -10,5 +10,7 @@ namespace Application.Interfaces
         Task<CategoryResponseDto> GetAllCategoriesAsync();
 
         Task<CategoryResponseDto> CreateCategoryAsync(string name);
+
+        Task<CategoryResponseDto> DeleteCategoryAsync(int id);
     }
 }

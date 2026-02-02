@@ -81,6 +81,43 @@ namespace Application.Services
 
         }
 
+        public async Task<CategoryResponseDto> DeleteCategoryAsync(int id)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var category = await _categoryRepository.GetByIdAsync(id);
+
+                if (category == null)
+                {
+                    _logger.LogWarning("Tentativa de deletar categoria inexistente: {Id}", id);
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return new CategoryResponseDto {
+                        Message = "Categoria não encontrada",
+                        Status = "not_found"
+                    };
+                }
+
+                _categoryRepository.Delete(category);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                return new CategoryResponseDto {
+                    Message = "Categoria removida com sucesso",
+                    Status = "success"
+                };
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                _logger.LogError(ex, "Erro ao deletar categoria {Id}", id);
+                return new CategoryResponseDto {
+                    Message = "Erro interno ao deletar",
+                    Status = "error" 
+                };
+            }
+        }
+
         public async Task<CategoryResponseDto> GetAllCategoriesAsync()
         {
             await _unitOfWork.BeginTransactionAsync();

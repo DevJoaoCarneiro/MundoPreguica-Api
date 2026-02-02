@@ -70,5 +70,27 @@ namespace Api.Controller
                 return StatusCode(500, new { Message = "Erro interno", Status = "error" });
             }
         }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> deleteCategory([FromRoute] int id)
+        {
+            try
+            {
+                _logger.LogInformation("Começando a exclusão de categoria: {id}", id);
+                var result = await _categoryService.DeleteCategoryAsync(id);
+                return result.Status switch
+                {
+                    "success" => Ok(result),
+                    "not_found" => NotFound(result),
+                    "error" => StatusCode(500, result),
+                    _ => StatusCode(500, result)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro inesperado no Controller de Categoria");
+                return StatusCode(500, new { Message = "Erro interno", Status = "error" });
+            }
+        }
     }
 }

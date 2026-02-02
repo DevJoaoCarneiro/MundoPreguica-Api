@@ -11,5 +11,9 @@ namespace Domain.Interfaces
 
         Task<bool> CategoryExistsAsync(string name);
         Task AddCategoryAsync(Category category);
+
+        Task<Category?> GetByIdAsync(int id);
+
+        void Delete(Category category);
     }
 }
