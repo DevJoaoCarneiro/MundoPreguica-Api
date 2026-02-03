@@ -7,7 +7,7 @@ namespace Domain.Interfaces
 {
     public interface ICategoryRepository
     {
-        Task<IEnumerable<string>> GetAllCategoryNames();
+        Task<IEnumerable<Category>> GetAllCategoryNames();
 
         Task<bool> CategoryExistsAsync(string name);
         Task AddCategoryAsync(Category category);

@@ -14,6 +14,7 @@ namespace Domain.Interfaces
         Task<(IEnumerable<Product> Products, int TotalCount)> GetByFiltersAsync(
             string? name,
             int? categoryId,
+            int? gender,
             ProductStatus? status,
             ProductSize? size,
             int page,

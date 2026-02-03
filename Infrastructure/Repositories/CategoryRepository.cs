@@ -18,24 +18,22 @@ namespace Infrastructure.Repositories
         }
 
 
-        public async Task<IEnumerable<string>> GetAllCategoryNames()
+        public async Task<IEnumerable<Category>> GetAllCategoryNames()
         {
             _logger.LogInformation("Iniciando a busca de todas as categorias no banco de dados.");
 
             try
             {
+                var categories = await _context.Category
+                    .ToListAsync();
 
-                var categoryNames = await _context.Category
-                .Select(c => c.Name)
-                .ToListAsync();
-
-                _logger.LogInformation("Nomes recuperados: {Count}", categoryNames.Count);
-                return categoryNames;
+                _logger.LogInformation("Categorias recuperadas: {Count}", categories.Count);
+                return categories;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ocorreu um erro ao tentar buscar as categorias no banco de dados.");
-                throw; 
+                throw;
             }
         }
 

@@ -10,6 +10,12 @@ namespace Application.Response
 
         public string Status { get; set; } = string.Empty;
 
-        public string CategoryName { get; set; } = string.Empty;
+        public IEnumerable<CategoryDto> Categories { get; set; } = new List<CategoryDto>();
+    }
+
+    public class CategoryDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

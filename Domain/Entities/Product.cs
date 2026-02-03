@@ -14,6 +14,8 @@ namespace Domain.Entities
         public string ImageUrL { get; set; } = string.Empty;
 
         public int Stock { get; set; }
+
+        public int Gender { get; set; }
         public ProductSize Size { get; set; }
 
         public ProductStatus Status { get; set; }

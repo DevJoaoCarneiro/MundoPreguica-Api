@@ -40,6 +40,7 @@ namespace Infrastructure.Repositories
         public async Task<(IEnumerable<Product> Products, int TotalCount)> GetByFiltersAsync(
             string? name,
             int? categoryId,
+            int? gender,
             ProductStatus? status,
             ProductSize? size,
             int page,
@@ -58,6 +59,9 @@ namespace Infrastructure.Repositories
 
                 if (categoryId.HasValue && categoryId > 0)
                     query = query.Where(p => p.CategoryId == categoryId.Value);
+
+                if (gender.HasValue && gender > 0)
+                    query = query.Where(p => p.Gender == gender.Value);
 
                 if (status.HasValue)
                     query = query.Where(p => p.Status == status.Value);

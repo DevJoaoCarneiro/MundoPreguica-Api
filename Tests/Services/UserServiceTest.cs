@@ -40,10 +40,10 @@ public class UserServiceTest
         var result = await _service.createUser(request);
 
         //Assert
-        Assert.Equal("User created successfully", result.message);
-        Assert.Equal("Success", result.status);
-        Assert.Equal(request.name, result.data.name);
-        Assert.Equal(request.email, result.data.email);
+        Assert.Equal("User created successfully", result.Message);
+        Assert.Equal("Success", result.Status);
+        Assert.Equal(request.name, result.Data.Name);
+        Assert.Equal(request.email, result.Data.Email);
 
     }
 
@@ -57,9 +57,9 @@ public class UserServiceTest
         var result = await _service.createUser(request);
 
         //Assert
-        Assert.Equal("Parameters is empty or null", result.message);
-        Assert.Equal("invalid_argument", result.status);
-        Assert.Null(result.data);
+        Assert.Equal("Parameters is empty or null", result.Message);
+        Assert.Equal("invalid_argument", result.Status);
+        Assert.Null(result.Data);
     }
 
     [Fact]
@@ -83,8 +83,8 @@ public class UserServiceTest
         var result = await _service.createUser(request);
 
         // Assert
-        Assert.Equal("error", result.status);
-        Assert.Null(result.data);
+        Assert.Equal("error", result.Status);
+        Assert.Null(result.Data);
 
     }
 

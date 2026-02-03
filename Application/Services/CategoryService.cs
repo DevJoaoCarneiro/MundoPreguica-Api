@@ -21,16 +21,16 @@ namespace Application.Services
 
         public async Task<CategoryResponseDto> CreateCategoryAsync(string name)
         {
+            _unitOfWork.BeginTransactionAsync();
             try
             {
-                if (string.IsNullOrEmpty(name) && name == null)
+                if (string.IsNullOrEmpty(name))
                 {
                     _logger.LogWarning("Nome da categoria nulo ou vazio");
                     return new CategoryResponseDto
                     {
                         Message = "Nome da categoria invalido",
                         Status = "invalid_argument",
-                        CategoryName = string.Empty
                     };
                 }
 
@@ -44,7 +44,6 @@ namespace Application.Services
                     {
                         Message = "Categoria já existe",
                         Status = "conflict",
-                        CategoryName = name
                     };
                 }
 
@@ -52,7 +51,7 @@ namespace Application.Services
                 var newCategory = new Category
                 {
                     Name = name,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
                 };
 
                 await _categoryRepository.AddCategoryAsync(newCategory);
@@ -64,7 +63,10 @@ namespace Application.Services
                 {
                     Message = "Categoria criada com sucesso",
                     Status = "success",
-                    CategoryName = name
+                    Categories = new List<CategoryDto>
+                    {
+                        new CategoryDto { Id = newCategory.Id, Name = newCategory.Name }
+                    }
                 };
             }
             catch (Exception ex)
@@ -75,7 +77,6 @@ namespace Application.Services
                 {
                     Message = "Erro ao criar categoria: " + ex.Message,
                     Status = "error",
-                    CategoryName = string.Empty
                 };
             }
 
@@ -92,7 +93,8 @@ namespace Application.Services
                 {
                     _logger.LogWarning("Tentativa de deletar categoria inexistente: {Id}", id);
                     await _unitOfWork.RollbackTransactionAsync();
-                    return new CategoryResponseDto {
+                    return new CategoryResponseDto
+                    {
                         Message = "Categoria não encontrada",
                         Status = "not_found"
                     };
@@ -102,7 +104,8 @@ namespace Application.Services
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
-                return new CategoryResponseDto {
+                return new CategoryResponseDto
+                {
                     Message = "Categoria removida com sucesso",
                     Status = "success"
                 };
@@ -111,16 +114,16 @@ namespace Application.Services
             {
                 await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Erro ao deletar categoria {Id}", id);
-                return new CategoryResponseDto {
+                return new CategoryResponseDto
+                {
                     Message = "Erro interno ao deletar",
-                    Status = "error" 
+                    Status = "error"
                 };
             }
         }
 
         public async Task<CategoryResponseDto> GetAllCategoriesAsync()
         {
-            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 _logger.LogInformation("Iniciando serviço para buscar todas as categorias.");
@@ -129,12 +132,12 @@ namespace Application.Services
 
                 if (categories == null || !categories.Any())
                 {
-                    _logger.LogWarning("Nenhuma categoria encontrada no banco de dados.");
+                    _logger.LogWarning("Nenhuma categoria encontrada.");
                     return new CategoryResponseDto
                     {
                         Message = "Nenhuma categoria encontrada",
                         Status = "not_found",
-                        CategoryName = string.Empty
+                        Categories = new List<CategoryDto>()
                     };
                 }
 
@@ -144,7 +147,11 @@ namespace Application.Services
                 {
                     Message = "Categorias listadas com sucesso",
                     Status = "success",
-                    CategoryName = string.Join(", ", categories)
+                    Categories = categories.Select(c => new CategoryDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name
+                    })
                 };
             }
             catch (Exception ex)
@@ -153,8 +160,7 @@ namespace Application.Services
                 return new CategoryResponseDto
                 {
                     Message = "Erro ao processar categorias: " + ex.Message,
-                    Status = "error",
-                    CategoryName = string.Empty
+                    Status = "error"
                 };
             }
         }

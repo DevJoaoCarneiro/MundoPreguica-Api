@@ -98,6 +98,7 @@ namespace Application.Services
                         ImageUrL = imageUrl,
                         Size = (ProductSize)variant.Size,
                         Stock = variant.Stock,
+                        Gender = productRequestDto.Gender,
                         Status = ProductStatus.Available,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
@@ -119,6 +120,7 @@ namespace Application.Services
                     {
                         Id = createdProducts.First().Id,
                         Name = productRequestDto.Name,
+                        Gender = productRequestDto.Gender,
                         Price = productRequestDto.Price,
                         Category = productRequestDto.CategoryId,
                         ImageUrL = imageUrl,
@@ -147,6 +149,7 @@ namespace Application.Services
                 var (products, totalItems) = await _productRepository.GetByFiltersAsync(
                         filter.Name,
                         filter.CategoryId,
+                        filter.gender,
                         filter.Status,
                         filter.Size,
                         currentPage,
@@ -159,6 +162,7 @@ namespace Application.Services
                         Id = g.First().Id,
                         Name = g.Key,
                         Category = g.First().Category?.Name ?? "Sem Categoria",
+                        Gender = g.First().Gender,
                         Price = g.First().Price,
                         ImageUrL = g.First().ImageUrL,
                         Status = g.First().Status.ToString(),
@@ -227,6 +231,7 @@ namespace Application.Services
                         Id = productVariant.Id,
                         Name = productVariant.Name,
                         Category = productVariant.CategoryId,
+                        Gender = productVariant.Gender,
                         Price = productVariant.Price,
                         ImageUrL = productVariant.ImageUrL,
 
@@ -275,6 +280,7 @@ namespace Application.Services
                 var allVariants = (await _productRepository.GetByNameAsync(existingProduct.Name)).ToList();
 
                 var newName = string.IsNullOrWhiteSpace(productRequestDto.Name) ? existingProduct.Name : productRequestDto.Name;
+                var newGender = productRequestDto.Gender > 0 ? productRequestDto.Gender : existingProduct.Gender;
                 var newCategoryId = productRequestDto.CategoryId > 0 ? productRequestDto.CategoryId : existingProduct.CategoryId;
                 var newPrice = productRequestDto.Price > 0 ? productRequestDto.Price : existingProduct.Price;
 
@@ -340,6 +346,7 @@ namespace Application.Services
                         ImageUrL = imageUrl,
                         Size = (ProductSize)variant.Size,
                         Stock = variant.Stock,
+                        Gender = newGender,
                         Status = existingProduct.Status,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
@@ -362,6 +369,7 @@ namespace Application.Services
                         Name = allVariants.First().Name,
                         Price = allVariants.First().Price,
                         Category = allVariants.First().CategoryId,
+                        Gender = allVariants.First().Gender,
                         ImageUrL = imageUrl,
                         Variants = allVariants.Select(v => new VariantInfoResponse
                         {

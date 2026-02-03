@@ -32,6 +32,10 @@ namespace Infrastructure.Persistence
                    .HasColumnName("stock")
                    .IsRequired();
 
+            builder.Property(p => p.Gender)
+                   .HasColumnName("gender")
+                   .IsRequired();
+
             builder.Property(p => p.Size)
                    .HasColumnName("size")
                    .IsRequired()
