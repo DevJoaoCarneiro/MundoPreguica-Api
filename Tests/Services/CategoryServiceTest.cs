@@ -1,9 +1,12 @@
 ﻿using Application.Services;
+using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReceivedExtensions;
+using NSubstitute.ReturnsExtensions;
+using System.Xml.Linq;
 
 namespace Tests.Services
 {
@@ -78,6 +81,66 @@ namespace Tests.Services
 
             Assert.Equal("error", result.Status);
             await _categorRepository.Received(1).CategoryExistsAsync(Arg.Any<string>());
+        }
+
+        [Fact]
+        public async Task Should_Return_All_Category_When_No_Error()
+        {
+            var expectedList = new List<Category>
+            {
+                new Category
+                {
+                    Id = 1,
+                    Name = "Pijamas",
+                    CreatedAt = DateTime.UtcNow
+                }, 
+            };
+
+            _categorRepository.GetAllCategoryNames().Returns(expectedList);
+
+            var result = await _service.GetAllCategoriesAsync();
+
+
+            Assert.Equal("Categorias listadas com sucesso", result.Message);
+            Assert.Equal("success", result.Status);
+
+            var category = result.Categories.First();
+
+            Assert.Equal(1, category.Id);
+            Assert.Equal("Pijamas", category.Name);
+
+            Assert.Equal(expectedList[0].Name, category.Name);
+            Assert.Equal(expectedList[0].Id, category.Id);
+
+            _categorRepository.Received(1).GetAllCategoryNames();
+        }
+
+        [Fact]
+        public async Task When_The_Table_Category_Is_Empty_Or_Result_Is_Null()
+        {
+            _categorRepository.GetAllCategoryNames().ReturnsNull();
+
+            var result = await _service.GetAllCategoriesAsync();
+
+            Assert.Equal("Nenhuma categoria encontrada", result.Message);
+            Assert.Equal("not_found", result.Status);
+            Assert.Empty(result.Categories);
+
+            _categorRepository.Received(1).GetAllCategoryNames();
+
+        }
+
+        [Fact]
+        public async Task Should_Return_Catch_When_Error()
+        {
+            _categorRepository.GetAllCategoryNames().ThrowsAsync(new Exception("Error simulated"));
+
+            var result = await _service.GetAllCategoriesAsync();
+
+            Assert.Equal("error", result.Status);
+            Assert.Empty(result.Categories);
+
+            _categorRepository.Received(1).GetAllCategoryNames();
         }
     }
 }
