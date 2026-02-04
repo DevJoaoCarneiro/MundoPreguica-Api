@@ -3,6 +3,7 @@ using Application.Request;
 using Application.Service;
 using Domain.Entities.Enum;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace Api.controller
 {
@@ -25,7 +26,7 @@ namespace Api.controller
         {
             try
             {
-                _logger.LogInformation("Começando o cadastro de produto..", productRequestDto.Name);
+                _logger.LogInformation("Começando o cadastro de produto: {ProductName}", productRequestDto?.Name);
 
                 var result = await _productServices.CreateNewProduct(productRequestDto);
 
@@ -40,10 +41,10 @@ namespace Api.controller
             }
             catch (Exception ex)
             {
-                _logger.LogError("Erro no cadastro de produto..", productRequestDto.Name);
+                _logger.LogError(ex, "Erro no cadastro de produto: {ProductName}", productRequestDto?.Name);
                 return StatusCode(500, new
                 {
-                    Message = "Ocorreu um erro inesperado ao criar o produto: " + ex.Message,
+                    Message = "Ocorreu um erro inesperado ao criar o produto.",
                     Status = "error"
                 });
             }
@@ -60,17 +61,17 @@ namespace Api.controller
 
                 return result.Status switch
                 {
-                    "not_found" => NotFound(404),
-                    "error" => StatusCode(500),
+                    "not_found" => NotFound(result),
+                    "error" => StatusCode(500, result),
                     _ => Ok(result)
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError("Erro na consulta de produto..");
+                _logger.LogError(ex, "Erro na consulta de produto.");
                 return StatusCode(500, new
                 {
-                    Message = "Ocorreu um erro inesperado ao criar o produto: " + ex.Message,
+                    Message = "Ocorreu um erro inesperado ao consultar produtos.",
                     Status = "error"
                 });
             }
@@ -87,17 +88,17 @@ namespace Api.controller
                 var result = await _productServices.GetByIdAsync(productId);
                 return result.Status switch
                 {
-                    "not_found" => NotFound(404),
-                    "error" => StatusCode(500),
+                    "not_found" => NotFound(result),
+                    "error" => StatusCode(500, result),
                     _ => Ok(result)
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError("Erro na consulta de produto por Id..", productId);
+                _logger.LogError(ex, "Erro na consulta de produto por Id: {ProductId}", productId);
                 return StatusCode(500, new
                 {
-                    Message = "Ocorreu um erro inesperado ao criar o produto: " + ex.Message,
+                    Message = "Ocorreu um erro inesperado ao consultar o produto.",
                     Status = "error"
                 });
             }
@@ -110,7 +111,7 @@ namespace Api.controller
         {
             try
             {
-                _logger.LogInformation("Começando a edição do produto..", productRequestDto.Name);
+                _logger.LogInformation("Começando a edição do produto: {ProductName}", productRequestDto?.Name);
 
                 var result = await _productServices.updateProductById(productId, productRequestDto);
 
@@ -125,10 +126,10 @@ namespace Api.controller
             }
             catch (Exception ex)
             {
-                _logger.LogError("Erro ao editar o produto..", ex.Message);
+                _logger.LogError(ex, "Erro ao editar o produto.");
                 return StatusCode(500, new
                 {
-                    Message = "Ocorreu um erro inesperado ao editar o produto: " + ex.Message,
+                    Message = "Ocorreu um erro inesperado ao editar o produto.",
                     Status = "error"
                 });
             }
@@ -141,6 +142,15 @@ namespace Api.controller
             try
             {
                 _logger.LogInformation("Iniciando alteração de status para o produto ID: {ProductId}", productId);
+
+                if (!Enum.IsDefined(typeof(ProductStatus), newStatus))
+                {
+                    return BadRequest(new
+                    {
+                        Message = "Status inválido.",
+                        Status = "invalid_argument"
+                    });
+                }
 
                 var statusEnum = (ProductStatus)newStatus;
 
@@ -158,7 +168,7 @@ namespace Api.controller
                 _logger.LogError(ex, "Erro ao alterar status do produto ID: {ProductId}", productId);
                 return StatusCode(500, new
                 {
-                    Message = "Erro ao processar alteração de status: " + ex.Message,
+                    Message = "Erro ao processar alteração de status.",
                     Status = "error"
                 });
             }

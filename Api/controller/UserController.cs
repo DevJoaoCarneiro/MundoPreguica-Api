@@ -29,17 +29,17 @@ namespace Api.controller
 
                 return result.Status switch
                 {
-                    "invalid_argument" => BadRequest(500),
-                    "not_found" => NotFound(404),
-                    "internal_error" => StatusCode(500),
-                    "error" => StatusCode(500),
+                    "invalid_argument" => BadRequest(result),
+                    "not_found" => NotFound(result),
+                    "internal_error" => StatusCode(500, result),
+                    "error" => StatusCode(500, result),
                     _ => Ok(result)
                 };
             }
             catch (Exception)
             {
 
-                return StatusCode(500);
+                return StatusCode(500, new { Message = "Erro interno.", Status = "error" });
             }
             
              

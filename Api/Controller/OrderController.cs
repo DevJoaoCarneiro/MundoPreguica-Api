@@ -28,6 +28,11 @@ namespace Api.Controller
                 _logger.LogInformation("Recebendo requisição para novo pedido. Cliente: {CustomerName}",
                     orderRequestDto?.ClientInformation?.Name);
 
+                if (orderRequestDto == null)
+                {
+                    return BadRequest(new { Message = "Requisição inválida.", Status = "invalid_argument" });
+                }
+
                 var result = await _orderService.createNewOrderAsync(orderRequestDto);
 
                 return result.Status switch
@@ -105,17 +110,30 @@ namespace Api.Controller
         [Route("{orderId}/return")]
         public async Task<IActionResult> updateConsignedOrder([FromRoute] Guid orderId, [FromBody] SettleConsignmentRequestDto request)
         {
-            _logger.LogInformation("Iniciando liquidação de consignado para o pedido: {Id}", orderId);
-
-            var result = await _orderService.SettleConsignmentAsync(orderId, request);
-
-            return result.Status switch
+            try
             {
-                "success" => Ok(result),
-                "not_found" => NotFound(result),
-                "invalid_argument" => BadRequest(result),
-                _ => StatusCode(500, result)
-            };
+                _logger.LogInformation("Iniciando liquidação de consignado para o pedido: {Id}", orderId);
+
+                if (request == null)
+                {
+                    return BadRequest(new { Message = "Requisição inválida.", Status = "invalid_argument" });
+                }
+
+                var result = await _orderService.SettleConsignmentAsync(orderId, request);
+
+                return result.Status switch
+                {
+                    "success" => Ok(result),
+                    "not_found" => NotFound(result),
+                    "invalid_argument" => BadRequest(result),
+                    _ => StatusCode(500, result)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro inesperado no endpoint de liquidação de consignado.");
+                return StatusCode(500, new { Message = "Ocorreu um erro inesperado no servidor.", Status = "error" });
+            }
         }
     }
 

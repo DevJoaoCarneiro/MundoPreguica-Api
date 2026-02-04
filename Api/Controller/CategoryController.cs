@@ -29,17 +29,17 @@ namespace Api.Controller
 
                 return result.Status switch
                 {
-                    "not_found" => NotFound(404),
-                    "error" => StatusCode(500),
+                    "not_found" => NotFound(result),
+                    "error" => StatusCode(500, result),
                     _ => Ok(result)
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError("Erro na busca de categorias..");
+                _logger.LogError(ex, "Erro na busca de categorias.");
                 return StatusCode(500, new
                 {
-                    Message = "Ocorreu um erro inesperado buscar categoria: " + ex.Message,
+                    Message = "Ocorreu um erro inesperado ao buscar categorias.",
                     Status = "error"
                 });
             }

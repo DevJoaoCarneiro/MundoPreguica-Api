@@ -38,7 +38,7 @@ namespace Api.controller
                 return StatusCode(500, new
                 {
                     Message = "Internal server error",
-                    detail = ex.Message
+                    Status = "error"
                 });
             }
         }
@@ -61,10 +61,11 @@ namespace Api.controller
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro inesperado no endpoint de refresh token.");
                 return StatusCode(500, new
                 {
                     Message = "Internal server error",
-                    detail = ex.Message
+                    Status = "error"
                 });
             }
         }
