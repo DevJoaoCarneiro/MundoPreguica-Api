@@ -142,5 +142,45 @@ namespace Tests.Services
 
             _categorRepository.Received(1).GetAllCategoryNames();
         }
+
+        [Fact]
+        public async Task Should_Delete_A_Category_When_No_Error()
+        {
+            var idCategory = 1;
+
+            var expetectedCategory = new Category
+            {
+                Id = idCategory,
+            };
+
+            _categorRepository.GetByIdAsync(idCategory).Returns(expetectedCategory);
+
+            _categorRepository.Delete(Arg.Any<Category>());
+
+            var result = await _service.DeleteCategoryAsync(idCategory);
+
+            Assert.Equal("Categoria removida com sucesso", result.Message);
+            Assert.Equal("success", result.Status);
+
+            _categorRepository.Received(1).GetByIdAsync(idCategory);
+
+            _categorRepository.Received(1).Delete(Arg.Any<Category>());
+
+        }
+
+        [Fact]
+        public async Task Should_Return_Not_Found_When_Id_Is_Null()
+        {
+            var idCategory = 1;
+
+            _categorRepository.GetByIdAsync(idCategory).ReturnsNull();
+
+            var result = await _service.DeleteCategoryAsync(idCategory);
+
+            Assert.Equal("Categoria não encontrada", result.Message);
+            Assert.Equal("not_found", result.Status);
+
+            _categorRepository.Received(1).GetByIdAsync(idCategory);
+        }
     }
 }
