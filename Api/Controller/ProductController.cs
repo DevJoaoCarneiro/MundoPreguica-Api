@@ -107,7 +107,7 @@ namespace Api.controller
 
         [HttpPut]
         [Route("{productId}")]
-        public async Task<IActionResult> updateProduct([FromRoute] Guid productId, [FromForm] ProductRequestDto productRequestDto)
+        public async Task<IActionResult> updateProduct([FromRoute] Guid productId, [FromForm] ProductRequestUpdateDto productRequestDto)
         {
             try
             {

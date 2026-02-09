@@ -16,7 +16,7 @@ namespace Application.Interfaces
 
         Task<ProductResponseDto> GetByIdAsync(Guid productId);
 
-        Task<ProductResponseDto> updateProductById(Guid productId, ProductRequestDto productRequestDto);
+        Task<ProductResponseDto> updateProductById(Guid productId, ProductRequestUpdateDto productRequestDto);
 
         Task<ProductStatusResponseDto> UpdateStatusAsync(Guid productId, ProductStatus newStatus);
     }

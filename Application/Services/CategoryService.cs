@@ -21,7 +21,7 @@ namespace Application.Services
 
         public async Task<CategoryResponseDto> CreateCategoryAsync(string name)
         {
-            _unitOfWork.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 if (string.IsNullOrEmpty(name))

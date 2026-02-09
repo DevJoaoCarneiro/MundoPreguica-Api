@@ -257,7 +257,7 @@ namespace Application.Services
         }
 
 
-        public async Task<ProductResponseDto> updateProductById(Guid productId, ProductRequestDto productRequestDto)
+        public async Task<ProductResponseDto> updateProductById(Guid productId, ProductRequestUpdateDto productRequestDto)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -294,66 +294,15 @@ namespace Application.Services
                     }
                 }
 
-                var requestedVariants = productRequestDto.Variant ?? new List<ProductVariantRequest>();
-                var duplicateSizes = requestedVariants
-                    .GroupBy(v => v.Size)
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key)
-                    .ToList();
-
-                if (duplicateSizes.Any())
-                {
-                    _logger.LogWarning("Tamanhos duplicados na requisição: {Sizes}", string.Join(",", duplicateSizes));
-                    return new ProductResponseDto
-                    {
-                        Message = "Duplicate sizes in request",
-                        Status = "invalid_argument",
-                        Data = null
-                    };
-                }
-
                 foreach (var p in allVariants)
                 {
                     p.Name = newName;
                     p.CategoryId = newCategoryId;
+                    p.Gender = newGender;
                     p.Price = newPrice;
                     p.ImageUrL = imageUrl;
                     p.UpdatedAt = DateTime.UtcNow;
-                    var variantUpdate = requestedVariants
-                        .FirstOrDefault(v => (ProductSize)v.Size == p.Size);
-
-                    if (variantUpdate != null)
-                    {
-                        p.Stock = variantUpdate.Stock;
-                    }
-
                     await _productRepository.UpdateAsync(p);
-                }
-
-                foreach (var variant in requestedVariants)
-                {
-                    if (allVariants.Any(v => (int)v.Size == variant.Size))
-                    {
-                        continue;
-                    }
-
-                    var newVariant = new Product
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = newName,
-                        CategoryId = newCategoryId,
-                        Price = newPrice,
-                        ImageUrL = imageUrl,
-                        Size = (ProductSize)variant.Size,
-                        Stock = variant.Stock,
-                        Gender = newGender,
-                        Status = existingProduct.Status,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-
-                    await _productRepository.AddAsync(newVariant);
-                    allVariants.Add(newVariant);
                 }
 
                 await _unitOfWork.CommitAsync();
