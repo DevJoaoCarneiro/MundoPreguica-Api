@@ -313,6 +313,86 @@ namespace Application.Services
 
         }
 
+        public async Task<OrderResponseDto> CancelOrderAsync(Guid orderId)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                if (orderId == Guid.Empty)
+                {
+                    return new OrderResponseDto
+                    {
+                        Message = "ID do pedido é obrigatório.",
+                        Status = "invalid_argument"
+                    };
+                }
+
+                var order = await _orderRepository.GetByIdAsync(orderId);
+                if (order == null)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return new OrderResponseDto
+                    {
+                        Message = "Pedido não encontrado.",
+                        Status = "not_found"
+                    };
+                }
+
+                if (order.OrderStatus == OrderStatus.Finish)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return new OrderResponseDto
+                    {
+                        Message = "Pedido já pago não pode ser cancelado.",
+                        Status = "invalid_operation"
+                    };
+                }
+
+                if (order.OrderStatus == OrderStatus.Canceled)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return new OrderResponseDto
+                    {
+                        Message = "Pedido já está cancelado.",
+                        Status = "invalid_operation"
+                    };
+                }
+
+                foreach (var item in order.Items)
+                {
+                    var product = await _productRepository.GetByIdAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.Stock += item.Quantity;
+                        await _productRepository.UpdateAsync(product);
+                    }
+                }
+
+                order.OrderStatus = OrderStatus.Canceled;
+                await _orderRepository.UpdateAsync(order);
+
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                return new OrderResponseDto
+                {
+                    Message = "Pedido cancelado com sucesso.",
+                    Status = "success",
+                    Order = MapToProductOrderDto(order)
+                };
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                _logger.LogError(ex, "Erro ao cancelar pedido: {OrderId}", orderId);
+                return new OrderResponseDto
+                {
+                    Message = "Erro interno.",
+                    Status = "error"
+                };
+            }
+        }
+
         private ProductOrderDto MapToProductOrderDto(Order order)
         {
             return new ProductOrderDto

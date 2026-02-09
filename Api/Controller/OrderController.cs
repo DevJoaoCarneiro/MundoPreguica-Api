@@ -154,6 +154,32 @@ namespace Api.Controller
                 return StatusCode(500, new { Message = "Ocorreu um erro inesperado no servidor.", Status = "error" });
             }
         }
+
+        [HttpPatch]
+        [Route("{orderId}/cancel")]
+        public async Task<IActionResult> cancelOrder([FromRoute] Guid orderId)
+        {
+            try
+            {
+                _logger.LogInformation("Cancelando pedido ID: {OrderId}", orderId);
+                var result = await _orderService.CancelOrderAsync(orderId);
+
+                return result.Status switch
+                {
+                    "success" => Ok(result),
+                    "not_found" => NotFound(result),
+                    "invalid_argument" => BadRequest(result),
+                    "invalid_operation" => UnprocessableEntity(result),
+                    "error" => StatusCode(500, result),
+                    _ => StatusCode(500, result)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao cancelar pedido ID: {OrderId}", orderId);
+                return StatusCode(500, new { Message = "Erro interno no servidor.", Status = "error" });
+            }
+        }
     }
 
 }
