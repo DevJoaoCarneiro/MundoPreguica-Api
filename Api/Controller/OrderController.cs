@@ -101,6 +101,30 @@ namespace Api.Controller
             }
         }
 
+        [HttpPatch]
+        [Route("{orderId}/status")]
+        public async Task<IActionResult> updateOrderStatus([FromRoute] Guid orderId)
+        {
+            try
+            {
+                _logger.LogInformation("Atualizando status do pedido ID: {OrderId}", orderId);
+                var result = await _orderService.UpdateOrderStatusAsync(orderId);
+                return result.Status switch
+                {
+                    "success" => Ok(result),
+                    "not_found" => NotFound(result),
+                    "invalid_argument" => BadRequest(result),
+                    "error" => StatusCode(500, result),
+                    _ => StatusCode(500, result)
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao atualizar status do pedido ID: {OrderId}", orderId);
+                return StatusCode(500, new { Message = "Erro interno no servidor.", Status = "error" });
+            }
+        }
+
         [HttpPut]
         [Route("{orderId}/return")]
         public async Task<IActionResult> updateConsignedOrder([FromRoute] Guid orderId, [FromBody] SettleConsignmentRequestDto request)

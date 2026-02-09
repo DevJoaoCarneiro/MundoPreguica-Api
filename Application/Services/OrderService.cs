@@ -156,6 +156,8 @@ namespace Application.Services
             }
         }
 
+
+
         public async Task<OrderResponseDto> GetOrderByIdAsync(Guid orderId)
         {
             try
@@ -184,7 +186,7 @@ namespace Application.Services
             try
             {
                 var order = await _orderRepository.GetByIdAsync(orderId);
-                if (order == null || order.OrderStatus != OrderStatus.Delivered)
+                if (order == null || order.OrderStatus != OrderStatus.Delivered )
                 {
                     await _unitOfWork.RollbackTransactionAsync();
                     return new OrderResponseDto {
@@ -246,6 +248,69 @@ namespace Application.Services
                     Status = "error" 
                 };
             }
+        }
+
+        public async Task<OrderResponseDto> UpdateOrderStatusAsync(Guid orderId)
+        {
+            _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                if (orderId == Guid.Empty)
+                {
+                    _logger.LogInformation("ID do pedido é obrigatório para atualização de status.");
+                    return new OrderResponseDto
+                    {
+                        Message = "ID do pedido é obrigatório.",
+                        Status = "invalid_argument"
+                    };
+                }
+
+                var order = await _orderRepository.GetByIdAsync(orderId);
+
+                if(order == null)
+                {
+                    _logger.LogInformation("Pedido com ID {OrderId} não encontrado.", orderId);
+                    return new OrderResponseDto
+                    {
+                        Message = "Pedido não encontrado.",
+                        Status = "not_found"
+                    };
+                }
+
+                order.OrderStatus = order.OrderStatus switch
+                {
+                    OrderStatus.Pending => OrderStatus.Delivered,
+                    OrderStatus.Delivered => OrderStatus.Pending,
+                    _ => order.OrderStatus
+                };
+
+                await _orderRepository.UpdateAsync(order);
+                await _unitOfWork.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                _logger.LogInformation("Status do pedido {OrderId} atualizado para Pendente.", orderId);
+                return new OrderResponseDto
+                {
+                    Message = "Status do pedido atualizado para Pendente.",
+                    Status = "success",
+                    Order = MapToProductOrderDto(order)
+                };
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao atualizar status do pedido.");
+                _unitOfWork.RollbackTransactionAsync();
+                return new OrderResponseDto
+                {
+                    Message = "Erro interno: " + ex.Message,
+                    Status = "error"
+                };
+            }
+            
+
+
+
         }
 
         private ProductOrderDto MapToProductOrderDto(Order order)
