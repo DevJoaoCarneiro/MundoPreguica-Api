@@ -28,11 +28,6 @@ namespace Api.Controller
                 _logger.LogInformation("Recebendo requisição para novo pedido. Cliente: {CustomerName}",
                     orderRequestDto?.ClientInformation?.Name);
 
-                if (orderRequestDto == null)
-                {
-                    return BadRequest(new { Message = "Requisição inválida.", Status = "invalid_argument" });
-                }
-
                 var result = await _orderService.createNewOrderAsync(orderRequestDto);
 
                 return result.Status switch

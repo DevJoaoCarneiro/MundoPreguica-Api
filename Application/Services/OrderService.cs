@@ -68,9 +68,7 @@ namespace Application.Services
                     ClientId = client.clientId,
                     TypeOrder = orderRequestDto.OrderType,
                     OrderDate = DateTime.UtcNow,
-                    OrderStatus = (OrderType)orderRequestDto.OrderType == OrderType.Sale
-                                  ? OrderStatus.Finish
-                                  : OrderStatus.Delivered,
+                    OrderStatus = OrderStatus.Pending,
                     TotalValue = 0
                 };
 

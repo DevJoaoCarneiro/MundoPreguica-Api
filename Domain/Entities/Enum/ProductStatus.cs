@@ -7,8 +7,6 @@ namespace Domain.Entities.Enum
     public enum ProductStatus
     {
         Available = 1,
-        Consigned = 2,
-        Sold = 3,
-        Inactive = 4
+        Inactive = 2
     }
 }

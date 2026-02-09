@@ -143,11 +143,11 @@ namespace Api.controller
             {
                 _logger.LogInformation("Iniciando alteração de status para o produto ID: {ProductId}", productId);
 
-                if (!Enum.IsDefined(typeof(ProductStatus), newStatus))
+                if (newStatus != (int)ProductStatus.Available && newStatus != (int)ProductStatus.Inactive)
                 {
                     return BadRequest(new
                     {
-                        Message = "Status inválido.",
+                        Message = "Status permitido apenas entre Available (1) e Inactive (2).",
                         Status = "invalid_argument"
                     });
                 }
