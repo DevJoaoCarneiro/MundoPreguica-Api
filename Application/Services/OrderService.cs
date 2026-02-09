@@ -127,13 +127,25 @@ namespace Application.Services
             }
         }
 
-        public async Task<OrderResponseListDto> GetAllOrdersAsync(int page)
+        public async Task<OrderResponseListDto> GetAllOrdersAsync(OrderFilterRequest filter)
         {
-            const int FixedPageSize = 10;
             try
             {
-                int currentPage = page > 0 ? page : 1;
-                var (orders, totalItems) = await _orderRepository.GetAllPagedAsync(currentPage, FixedPageSize);
+                if (filter == null)
+                {
+                    filter = new OrderFilterRequest();
+                }
+
+                int currentPage = filter.Page > 0 ? filter.Page : 1;
+                int pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
+
+                var (orders, totalItems) = await _orderRepository.GetByFiltersAsync(
+                    filter.Phone,
+                    filter.Status,
+                    filter.StartDate,
+                    filter.EndDate,
+                    currentPage,
+                    pageSize);
 
                 return new OrderResponseListDto
                 {
@@ -141,8 +153,8 @@ namespace Application.Services
                     Status = "success",
                     TotalItems = totalItems,
                     CurrentPage = currentPage,
-                    PageSize = FixedPageSize,
-                    TotalPages = (int)Math.Ceiling((double)totalItems / FixedPageSize),
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling((double)totalItems / pageSize),
                     Orders = orders.Select(MapToProductOrderDto).ToList()
                 };
             }

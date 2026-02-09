@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Infrastructure.Repositories
@@ -25,13 +26,39 @@ namespace Infrastructure.Repositories
             return order;
         }
 
-        public async Task<(IEnumerable<Order> Orders, int TotalCount)> GetAllPagedAsync(int page, int pageSize)
+        public async Task<(IEnumerable<Order> Orders, int TotalCount)> GetByFiltersAsync(
+            string? phone,
+            Domain.Entities.Enum.OrderStatus? status,
+            DateTime? startDate,
+            DateTime? endDate,
+            int page,
+            int pageSize)
         {
             var query = _context.Orders
                 .Include(o => o.Client)
                 .Include(o => o.Items)
                     .ThenInclude(i => i.Product)
                 .AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(phone))
+            {
+                query = query.Where(o => o.Client.clientPhone.Contains(phone));
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(o => o.OrderStatus == status.Value);
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(o => o.OrderDate >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(o => o.OrderDate <= endDate.Value);
+            }
 
             var totalCount = await query.CountAsync();
 

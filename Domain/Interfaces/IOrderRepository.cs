@@ -9,7 +9,13 @@ namespace Domain.Interfaces
     {
         Task<Order> AddAsync(Order product);
 
-        Task<(IEnumerable<Order> Orders, int TotalCount)> GetAllPagedAsync(int page, int pageSize);
+        Task<(IEnumerable<Order> Orders, int TotalCount)> GetByFiltersAsync(
+            string? phone,
+            Domain.Entities.Enum.OrderStatus? status,
+            DateTime? startDate,
+            DateTime? endDate,
+            int page,
+            int pageSize);
 
         Task<Order?> GetByIdAsync(Guid orderId);
 

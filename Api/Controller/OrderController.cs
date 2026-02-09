@@ -53,12 +53,12 @@ namespace Api.Controller
         }
 
         [HttpGet]
-        public async Task<IActionResult> getAllOrder(int currentPage)
+        public async Task<IActionResult> getAllOrder([FromQuery] OrderFilterRequest filter)
         {
             try
             {
                 _logger.LogInformation("Recebendo requisição para consulta de pedidos");
-                var result = await _orderService.GetAllOrdersAsync(currentPage);
+                var result = await _orderService.GetAllOrdersAsync(filter);
                 return result.Status switch
                 {
                     "success" => Ok(result),
