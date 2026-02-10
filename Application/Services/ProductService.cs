@@ -141,8 +141,8 @@ namespace Application.Services
         {
             try
             {
-                const int pageSize = 10;
                 int currentPage = filter.Page > 0 ? filter.Page : 1;
+                int pageSize = filter.PageSize > 0 ? filter.PageSize : 10;
 
                 _logger.LogInformation("Buscando produtos filtrados e agrupando por nome.");
 

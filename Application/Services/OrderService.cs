@@ -417,6 +417,7 @@ namespace Application.Services
                 OrderStatus = order.OrderStatus.ToString(),
                 Items = order.Items?.Select(i => new OrderItemSummaryDto
                 {
+                    ProductId = i.ProductId,
                     ProductName = i.Product?.Name ?? "Produto Removido",
                     Size = i.Product?.Size.ToString() ?? "-",
                     Quantity = i.Quantity

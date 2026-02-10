@@ -45,21 +45,32 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 
 var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-if (string.IsNullOrEmpty(rawConnectionString))
+if (string.IsNullOrWhiteSpace(rawConnectionString))
 {
-    throw new Exception("Connection string 'DefaultConnection' não encontrada.");
+    throw new Exception("Connection string 'DefaultConnection' nao encontrada.");
 }
 
-var uri = new Uri(rawConnectionString);
-var userInfo = uri.UserInfo.Split(':');
+string connectionString;
 
-var connectionString =
-    $"Host={uri.Host};" +
-    $"Port={uri.Port};" +
-    $"Database={uri.AbsolutePath.TrimStart('/')};" +
-    $"Username={userInfo[0]};" +
-    $"Password={userInfo[1]};" +
-    $"SSL Mode=Require;Trust Server Certificate=true";
+if (Uri.TryCreate(rawConnectionString, UriKind.Absolute, out var uri) && !string.IsNullOrWhiteSpace(uri.Host))
+{
+    var userInfo = uri.UserInfo.Split(':', 2, StringSplitOptions.RemoveEmptyEntries);
+    var username = userInfo.Length > 0 ? userInfo[0] : string.Empty;
+    var password = userInfo.Length > 1 ? userInfo[1] : string.Empty;
+    var database = uri.AbsolutePath.TrimStart('/');
+
+    connectionString =
+        $"Host={uri.Host};" +
+        $"Port={uri.Port};" +
+        $"Database={database};" +
+        $"Username={username};" +
+        $"Password={password};" +
+        $"SSL Mode=Require;Trust Server Certificate=true";
+}
+else
+{
+    connectionString = rawConnectionString;
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
