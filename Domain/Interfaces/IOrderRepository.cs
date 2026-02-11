@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Entities.Report;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -21,5 +22,7 @@ namespace Domain.Interfaces
         Task<Order?> GetByIdAsync(Guid orderId);
 
         Task UpdateAsync(Order order);
+
+        Task<List<DashboardMonthlySummary>> GetMonthlySummaryAsync(int year, int startMonth, int endMonth);
     }
 }

@@ -1,4 +1,6 @@
 ﻿using Domain.Entities;
+using Domain.Entities.Enum;
+using Domain.Entities.Report;
 using Domain.Interfaces;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -92,6 +94,29 @@ namespace Infrastructure.Repositories
         {
             _context.Orders.Update(order);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<DashboardMonthlySummary>> GetMonthlySummaryAsync(int year, int startMonth, int endMonth)
+        {
+            var startDate = new DateTime(year, startMonth, 1, 0, 0, 0, DateTimeKind.Utc);
+            var endDate = new DateTime(year, endMonth, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1);
+
+            return await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.OrderDate >= startDate && o.OrderDate < endDate)
+                .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
+                .Select(group => new DashboardMonthlySummary
+                {
+                    Year = group.Key.Year,
+                    Month = group.Key.Month,
+                    TotalOrders = group.Count(),
+                    SalesCount = group.Count(o => o.TypeOrder == OrderType.Sale),
+                    ConsignmentCount = group.Count(o => o.TypeOrder == OrderType.Consignment),
+                    AverageOrderValue = group.Average(o => o.TotalValue)
+                })
+                .OrderBy(s => s.Year)
+                .ThenBy(s => s.Month)
+                .ToListAsync();
         }
     }
 }
