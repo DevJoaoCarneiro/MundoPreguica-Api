@@ -29,6 +29,7 @@ namespace Infrastructure.Repositories
         public async Task<(IEnumerable<Order> Orders, int TotalCount)> GetByFiltersAsync(
             string? phone,
             Domain.Entities.Enum.OrderStatus? status,
+            Domain.Entities.Enum.OrderType? orderType,
             DateTime? startDate,
             DateTime? endDate,
             int page,
@@ -48,6 +49,11 @@ namespace Infrastructure.Repositories
             if (status.HasValue)
             {
                 query = query.Where(o => o.OrderStatus == status.Value);
+            }
+
+            if (orderType.HasValue)
+            {
+                query = query.Where(o => o.TypeOrder == orderType.Value);
             }
 
             if (startDate.HasValue)

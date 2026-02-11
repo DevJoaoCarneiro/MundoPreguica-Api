@@ -142,6 +142,7 @@ namespace Application.Services
                 var (orders, totalItems) = await _orderRepository.GetByFiltersAsync(
                     filter.Phone,
                     filter.Status,
+                    filter.OrderType,
                     filter.StartDate,
                     filter.EndDate,
                     currentPage,
@@ -415,6 +416,7 @@ namespace Application.Services
                 TotalValue = order.TotalValue,
                 Date = order.OrderDate,
                 OrderStatus = order.OrderStatus.ToString(),
+                OrderType = order.TypeOrder.ToString(),
                 Items = order.Items?.Select(i => new OrderItemSummaryDto
                 {
                     ProductId = i.ProductId,

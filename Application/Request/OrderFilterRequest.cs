@@ -7,6 +7,7 @@ namespace Application.Request
     {
         public string? Phone { get; set; }
         public OrderStatus? Status { get; set; }
+        public OrderType? OrderType { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 

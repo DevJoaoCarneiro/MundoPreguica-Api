@@ -29,6 +29,7 @@ namespace Application.Response
 
         public string CustomerPhone { get; set; } = string.Empty;
         public string OrderStatus { get; set; } = string.Empty;
+        public string OrderType { get; set; } = string.Empty;
         public DateTime Date { get; set; }
 
         public List<OrderItemSummaryDto> Items { get; set; } = new();

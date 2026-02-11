@@ -12,6 +12,7 @@ namespace Domain.Interfaces
         Task<(IEnumerable<Order> Orders, int TotalCount)> GetByFiltersAsync(
             string? phone,
             Domain.Entities.Enum.OrderStatus? status,
+            Domain.Entities.Enum.OrderType? orderType,
             DateTime? startDate,
             DateTime? endDate,
             int page,
