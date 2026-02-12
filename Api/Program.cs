@@ -1,6 +1,7 @@
 using Application.Interfaces;
 using Application.Service;
 using Application.Services;
+using Domain.Events;
 using Domain.Interfaces;
 using Domain.Repository;
 using Infrastructure.Context;
@@ -42,6 +43,12 @@ builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+builder.Services.AddScoped<IDomainEventHandler<OrderCreatedEvent>, OrderCreatedEventHandler>();
+builder.Services.AddSingleton<IOrderCreatedEmailQueue, OrderCreatedEmailQueue>();
+builder.Services.AddScoped<IOrderEmailSender, SmtpOrderEmailSender>();
+builder.Services.AddHostedService<OrderCreatedEmailHostedService>();
+builder.Services.Configure<EmailNotificationSettings>(builder.Configuration.GetSection("EmailNotification"));
 
 
 var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");

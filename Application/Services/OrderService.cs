@@ -93,9 +93,11 @@ namespace Application.Services
                         Id = Guid.NewGuid(),
                         OrderId = order.Id,
                         ProductId = product.Id,
+                        Product = product,
                         Quantity = itemDto.Amount,
                         UnitPrice = product.Price
                     };
+
 
                     totalOrderValue += (orderItem.UnitPrice * orderItem.Quantity);
                     product.Stock -= itemDto.Amount;
@@ -105,6 +107,7 @@ namespace Application.Services
 
                 order.TotalValue = totalOrderValue;
                 order.Items = orderItems;
+                order.MarkAsCreated();
 
                 await _orderRepository.AddAsync(order);
                 await _unitOfWork.CommitAsync();
@@ -351,7 +354,7 @@ namespace Application.Services
                     };
                 }
 
-                if (order.OrderStatus == OrderStatus.Finish)
+                if (order.OrderStatus != OrderStatus.Pending)
                 {
                     await _unitOfWork.RollbackTransactionAsync();
                     return new OrderResponseDto
@@ -386,6 +389,7 @@ namespace Application.Services
 
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
+
 
                 return new OrderResponseDto
                 {
