@@ -37,7 +37,7 @@ namespace Api.controller
                 _logger.LogCritical(ex, "Falha crítica no endpoint de autenticação para o usuário {UserEmail}", loginRequestDTO?.Mail);
                 return StatusCode(500, new
                 {
-                    Message = "Internal server error",
+                    Message = "Erro interno no servidor.",
                     Status = "error"
                 });
             }
@@ -64,7 +64,7 @@ namespace Api.controller
                 _logger.LogError(ex, "Erro inesperado no endpoint de refresh token.");
                 return StatusCode(500, new
                 {
-                    Message = "Internal server error",
+                    Message = "Erro interno no servidor.",
                     Status = "error"
                 });
             }

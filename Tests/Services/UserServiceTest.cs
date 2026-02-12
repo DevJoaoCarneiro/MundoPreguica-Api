@@ -40,7 +40,7 @@ public class UserServiceTest
         var result = await _service.createUser(request);
 
         //Assert
-        Assert.Equal("User created successfully", result.Message);
+        Assert.Equal("Usuario criado com sucesso", result.Message);
         Assert.Equal("Success", result.Status);
         Assert.Equal(request.name, result.Data.Name);
         Assert.Equal(request.email, result.Data.Email);
@@ -57,7 +57,7 @@ public class UserServiceTest
         var result = await _service.createUser(request);
 
         //Assert
-        Assert.Equal("Parameters is empty or null", result.Message);
+        Assert.Equal("Parametros estao vazios ou nulos", result.Message);
         Assert.Equal("invalid_argument", result.Status);
         Assert.Null(result.Data);
     }

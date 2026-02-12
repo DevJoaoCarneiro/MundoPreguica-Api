@@ -33,7 +33,7 @@ namespace Application.Services
                 {
                     return new LoginResponseDto
                     {
-                        Message = "User not found",
+                        Message = "Usuario ou senha invalidos",
                         Status = "invalid_credentials"
                     };
                 }
@@ -42,7 +42,7 @@ namespace Application.Services
                 {
                     return new LoginResponseDto
                     {
-                        Message = "Invalid password",
+                        Message = "Usuario ou senha invalidos",
                         Status = "invalid_credentials"
                     };
                 }
@@ -55,7 +55,7 @@ namespace Application.Services
 
                 return new LoginResponseDto
                 {
-                    Message = "Login successful",
+                    Message = "Login Realizado com Sucesso",
                     Status = "Success",
                     Token = token,
                     RefreshToken = refreshToken.Token
@@ -65,7 +65,7 @@ namespace Application.Services
             {
                 return new LoginResponseDto
                 {
-                    Message = "Internal Error",
+                    Message = "Erro interno",
                     Status = "error",
                     Token = "",
                     RefreshToken = ""
@@ -82,7 +82,7 @@ namespace Application.Services
                 {
                     return new RefreshTokenResponseDTO
                     {
-                        Message = "Invalid refresh token",
+                        Message = "Token de refresh invalido",
                         Status = "invalid_token"
                     };
                 }
@@ -91,7 +91,7 @@ namespace Application.Services
                 {
                     return new RefreshTokenResponseDTO
                     {
-                        Message = "Refresh token has expired",
+                        Message = "Token de refresh expirou",
                         Status = "expired_token"
                     };
                 }
@@ -111,7 +111,7 @@ namespace Application.Services
 
                     return new RefreshTokenResponseDTO
                     {
-                        Message = "Invalid token usage detected",
+                        Message = "Uso invalido do token detectado",
                         Status = "security_alert"
                     };
                 }
@@ -120,7 +120,7 @@ namespace Application.Services
                 {
                     return new RefreshTokenResponseDTO
                     {
-                        Message = "Critical Error",
+                        Message = "Erro critico",
                         Status = "not-found"
                     };
                 }
@@ -138,7 +138,7 @@ namespace Application.Services
 
                 return new RefreshTokenResponseDTO
                 {
-                    Message = "Token refreshed successfully",
+                    Message = "Token renovado com sucesso",
                     Status = "Success",
                     Data = new DataToken
                     {
@@ -151,7 +151,7 @@ namespace Application.Services
             {
                 return new RefreshTokenResponseDTO
                 {
-                    Message = "Internal Error: " + ex.Message,
+                    Message = "Erro interno: " + ex.Message,
                     Status = "error"
                 };
             }

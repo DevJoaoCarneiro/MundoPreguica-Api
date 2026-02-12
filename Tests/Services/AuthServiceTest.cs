@@ -35,7 +35,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("invalid_credentials", result.Status);
-            Assert.Equal("User not found", result.Message);
+            Assert.Equal("Usuario ou senha invalidos", result.Message);
         }
 
         [Fact]
@@ -57,7 +57,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("invalid_credentials", result.Status);
-            Assert.Equal("Invalid password", result.Message);
+            Assert.Equal("Usuario ou senha invalidos", result.Message);
         }
 
         [Fact]
@@ -86,7 +86,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("Success", result.Status);
-            Assert.Equal("Login successful", result.Message);
+            Assert.Equal("Login Realizado com Sucesso", result.Message);
             Assert.Equal("access-token", result.Token);
             Assert.Equal("refresh-token", result.RefreshToken);
 
@@ -106,7 +106,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("error", result.Status);
-            Assert.Equal("Internal Error", result.Message);
+            Assert.Equal("Erro interno", result.Message);
         }
 
         [Fact]
@@ -120,7 +120,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("invalid_token", result.Status);
-            Assert.Equal("Invalid refresh token", result.Message);
+            Assert.Equal("Token de refresh invalido", result.Message);
         }
 
         [Fact]
@@ -139,7 +139,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("expired_token", result.Status);
-            Assert.Equal("Refresh token has expired", result.Message);
+            Assert.Equal("Token de refresh expirou", result.Message);
         }
 
         [Fact]
@@ -168,7 +168,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("security_alert", result.Status);
-            Assert.Equal("Invalid token usage detected", result.Message);
+            Assert.Equal("Uso invalido do token detectado", result.Message);
 
             await _refreshTokenRepository.Received(2).UpdateAsync(Arg.Any<RefreshToken>());
             await _refreshTokenRepository.Received(1).SaveChangesAsync();
@@ -191,7 +191,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("not-found", result.Status);
-            Assert.Equal("Critical Error", result.Message);
+            Assert.Equal("Erro critico", result.Message);
         }
 
         [Fact]
@@ -222,7 +222,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("Success", result.Status);
-            Assert.Equal("Token refreshed successfully", result.Message);
+            Assert.Equal("Token renovado com sucesso", result.Message);
             Assert.Equal("new-access", result.Data.AccessToken);
             Assert.Equal("new-refresh", result.Data.RefreshToken);
 
@@ -242,7 +242,7 @@ namespace Tests.Services
             });
 
             Assert.Equal("error", result.Status);
-            Assert.StartsWith("Internal Error", result.Message);
+            Assert.StartsWith("Erro interno", result.Message);
         }
     }
 }

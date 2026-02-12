@@ -34,7 +34,7 @@ namespace Application.Services
                     _logger.LogInformation("Parametros null ou vazio");
                     return new ProductResponseDto
                     {
-                        Message = "Parameters is empty or null",
+                        Message = "Parametros estao vazios ou nulos",
                         Status = "invalid_argument",
                         Data = null
                     };
@@ -51,7 +51,7 @@ namespace Application.Services
                     _logger.LogWarning("Tamanhos duplicados na requisição: {Sizes}", string.Join(",", duplicateSizes));
                     return new ProductResponseDto
                     {
-                        Message = "Duplicate sizes in request",
+                        Message = "Tamanhos duplicados na requisicao",
                         Status = "invalid_argument",
                         Data = null
                     };
@@ -64,7 +64,7 @@ namespace Application.Services
                     _logger.LogWarning("Falha no upload da imagem para o produto: {ProductName}", productRequestDto.Name);
                     return new ProductResponseDto
                     {
-                        Message = "Image is required",
+                        Message = "Imagem obrigatoria",
                         Status = "invalid_argument",
                         Data = null
                     };
@@ -79,7 +79,7 @@ namespace Application.Services
                     _logger.LogWarning("Tentativa de criar tamanhos já existentes para o produto: {ProductName}", productRequestDto.Name);
                     return new ProductResponseDto
                     {
-                        Message = "Size already exists for this product",
+                        Message = "Tamanho ja existe para este produto",
                         Status = "invalid_argument",
                         Data = null
                     };
@@ -114,7 +114,7 @@ namespace Application.Services
 
                 return new ProductResponseDto
                 {
-                    Message = "Product grade created successfully",
+                    Message = "Grade de produto criada com sucesso",
                     Status = "success",
                     Data = new Data
                     {
@@ -131,7 +131,7 @@ namespace Application.Services
             {
                 await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Erro ao criar grade de produtos.");
-                return new ProductResponseDto { Message = "Internal Error: " + ex.Message, Status = "error" };
+                return new ProductResponseDto { Message = "Erro interno: " + ex.Message, Status = "error" };
             }
 
 
@@ -178,7 +178,7 @@ namespace Application.Services
 
                 return new FilterProductResponse
                 {
-                    Message = groupedList.Any() ? "Products listed successfully" : "No products found",
+                    Message = groupedList.Any() ? "Produtos listados com sucesso" : "Nenhum produto encontrado",
                     Status = "success",
                     TotalItems = totalItems,
                     CurrentPage = currentPage,
@@ -335,7 +335,7 @@ namespace Application.Services
                 _logger.LogError(ex, "Erro inesperado ao editar o produto: {ProductId}", productId);
                 return new ProductResponseDto
                 {
-                    Message = "Error while updating the product: " + ex.Message,
+                    Message = "Erro ao atualizar o produto: " + ex.Message,
                     Status = "error",
                     Data = null
                 };
@@ -380,7 +380,7 @@ namespace Application.Services
 
                 return new ProductStatusResponseDto
                 {
-                    Message = "Status updated successfully",
+                    Message = "Status atualizado com sucesso",
                     Status = "success",
                     Data = new DataStatus
                     {
@@ -395,7 +395,7 @@ namespace Application.Services
                 _logger.LogError(ex, "Erro inesperado ao atualizar status do produto: {ProductId}", productId);
                 return new ProductStatusResponseDto
                 {
-                    Message = "Error while updating status: " + ex.Message,
+                    Message = "Erro ao atualizar status: " + ex.Message,
                     Status = "error",
                     Data = null
                 };

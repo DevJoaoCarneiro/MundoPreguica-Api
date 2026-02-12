@@ -31,7 +31,7 @@ namespace Application.Service
                 {
                     return new UserResponseDTO
                     {
-                        Message = "Parameters is empty or null",
+                        Message = "Parametros estao vazios ou nulos",
                         Status = "invalid_argument",
                         Data = null
                     };
@@ -53,7 +53,7 @@ namespace Application.Service
 
                 return new UserResponseDTO
                 {
-                    Message = "User created successfully",
+                    Message = "Usuario criado com sucesso",
                     Status = "Success",
                     Data = new UserData
                     {
@@ -68,7 +68,7 @@ namespace Application.Service
 
                 return new UserResponseDTO
                 {
-                    Message = $"An error occurred: {ex.Message}",
+                    Message = $"Ocorreu um erro: {ex.Message}",
                     Status = "error",
                     Data = null
                 };

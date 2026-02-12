@@ -29,7 +29,7 @@ namespace Tests.Services
             var result = await _service.CreateNewProduct(null!);
 
             Assert.Equal("invalid_argument", result.Status);
-            Assert.Equal("Parameters is empty or null", result.Message);
+            Assert.Equal("Parametros estao vazios ou nulos", result.Message);
 
             await _unitOfWork.Received(1).BeginTransactionAsync();
             await _unitOfWork.Received(0).CommitAsync();
@@ -51,7 +51,7 @@ namespace Tests.Services
             var result = await _service.CreateNewProduct(request);
 
             Assert.Equal("invalid_argument", result.Status);
-            Assert.Equal("Duplicate sizes in request", result.Message);
+            Assert.Equal("Tamanhos duplicados na requisicao", result.Message);
         }
 
         [Fact]
@@ -72,7 +72,7 @@ namespace Tests.Services
             var result = await _service.CreateNewProduct(request);
 
             Assert.Equal("invalid_argument", result.Status);
-            Assert.Equal("Image is required", result.Message);
+            Assert.Equal("Imagem obrigatoria", result.Message);
         }
 
         [Fact]
@@ -97,7 +97,7 @@ namespace Tests.Services
             var result = await _service.CreateNewProduct(request);
 
             Assert.Equal("invalid_argument", result.Status);
-            Assert.Equal("Size already exists for this product", result.Message);
+            Assert.Equal("Tamanho ja existe para este produto", result.Message);
         }
 
         [Fact]
@@ -124,7 +124,7 @@ namespace Tests.Services
             var result = await _service.CreateNewProduct(request);
 
             Assert.Equal("success", result.Status);
-            Assert.Equal("Product grade created successfully", result.Message);
+            Assert.Equal("Grade de produto criada com sucesso", result.Message);
             Assert.Equal(request.Name, result.Data?.Name);
             Assert.Equal(request.CategoryId, result.Data?.Category);
 
@@ -174,7 +174,7 @@ namespace Tests.Services
             var result = await _service.UpdateStatusAsync(product.Id, ProductStatus.Inactive);
 
             Assert.Equal("success", result.Status);
-            Assert.Equal("Status updated successfully", result.Message);
+            Assert.Equal("Status atualizado com sucesso", result.Message);
             Assert.Equal("Inactive", result.Data?.ProductStatus);
         }
     }
