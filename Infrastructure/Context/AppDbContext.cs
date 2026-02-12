@@ -29,6 +29,12 @@ namespace Infrastructure.Context
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Category>().ToTable("Category");
+
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany()
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

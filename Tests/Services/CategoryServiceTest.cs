@@ -154,6 +154,7 @@ namespace Tests.Services
             };
 
             _categorRepository.GetByIdAsync(idCategory).Returns(expetectedCategory);
+            _categorRepository.CategoryHasProductsAsync(idCategory).Returns(false);
 
             _categorRepository.Delete(Arg.Any<Category>());
 
@@ -163,9 +164,33 @@ namespace Tests.Services
             Assert.Equal("success", result.Status);
 
             _categorRepository.Received(1).GetByIdAsync(idCategory);
+            await _categorRepository.Received(1).CategoryHasProductsAsync(idCategory);
 
             _categorRepository.Received(1).Delete(Arg.Any<Category>());
 
+        }
+
+        [Fact]
+        public async Task Should_Return_Conflict_When_Category_Has_Products()
+        {
+            var idCategory = 1;
+
+            var expetectedCategory = new Category
+            {
+                Id = idCategory,
+            };
+
+            _categorRepository.GetByIdAsync(idCategory).Returns(expetectedCategory);
+            _categorRepository.CategoryHasProductsAsync(idCategory).Returns(true);
+
+            var result = await _service.DeleteCategoryAsync(idCategory);
+
+            Assert.Equal("Categoria possui produtos cadastrados", result.Message);
+            Assert.Equal("conflict", result.Status);
+
+            _categorRepository.Received(1).GetByIdAsync(idCategory);
+            await _categorRepository.Received(1).CategoryHasProductsAsync(idCategory);
+            _categorRepository.Received(0).Delete(Arg.Any<Category>());
         }
 
         [Fact]

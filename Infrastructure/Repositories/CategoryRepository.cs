@@ -53,6 +53,11 @@ namespace Infrastructure.Repositories
             return await _context.Category.FindAsync(id);
         }
 
+        public async Task<bool> CategoryHasProductsAsync(int categoryId)
+        {
+            return await _context.Products.AnyAsync(p => p.CategoryId == categoryId);
+        }
+
         public void Delete(Category category)
         {
             _context.Category.Remove(category);

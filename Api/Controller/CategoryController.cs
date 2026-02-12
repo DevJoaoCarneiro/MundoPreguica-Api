@@ -81,6 +81,7 @@ namespace Api.Controller
                 return result.Status switch
                 {
                     "success" => Ok(result),
+                    "conflict" => Conflict(result),
                     "not_found" => NotFound(result),
                     "error" => StatusCode(500, result),
                     _ => StatusCode(500, result)

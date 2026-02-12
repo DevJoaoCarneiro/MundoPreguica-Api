@@ -14,6 +14,8 @@ namespace Domain.Interfaces
 
         Task<Category?> GetByIdAsync(int id);
 
+        Task<bool> CategoryHasProductsAsync(int categoryId);
+
         void Delete(Category category);
     }
 }

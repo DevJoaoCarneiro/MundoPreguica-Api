@@ -100,6 +100,18 @@ namespace Application.Services
                     };
                 }
 
+                var hasProducts = await _categoryRepository.CategoryHasProductsAsync(id);
+                if (hasProducts)
+                {
+                    _logger.LogWarning("Tentativa de deletar categoria com produtos vinculados: {Id}", id);
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return new CategoryResponseDto
+                    {
+                        Message = "Categoria possui produtos cadastrados",
+                        Status = "conflict"
+                    };
+                }
+
                 _categoryRepository.Delete(category);
                 await _unitOfWork.CommitAsync();
                 await _unitOfWork.CommitTransactionAsync();
