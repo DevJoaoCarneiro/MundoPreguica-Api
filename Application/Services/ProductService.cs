@@ -6,6 +6,7 @@ using Domain.Entities.Enum;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Reflection;
 
 namespace Application.Services
@@ -37,6 +38,17 @@ namespace Application.Services
                     return new ProductResponseDto
                     {
                         Message = "Parametros estao vazios ou nulos",
+                        Status = "invalid_argument",
+                        Data = null
+                    };
+                }
+
+                if (!TryNormalizePrice(productRequestDto.Price, out var normalizedPrice))
+                {
+                    _logger.LogWarning("Preço inválido informado para criação do produto: {Price}", productRequestDto.Price);
+                    return new ProductResponseDto
+                    {
+                        Message = "Preço inválido",
                         Status = "invalid_argument",
                         Data = null
                     };
@@ -96,7 +108,7 @@ namespace Application.Services
                         Id = Guid.NewGuid(),
                         Name = productRequestDto.Name,
                         CategoryId = productRequestDto.CategoryId,
-                        Price = productRequestDto.Price,
+                        Price = normalizedPrice,
                         ImageUrL = imageUrl,
                         Size = (ProductSize)variant.Size,
                         Stock = variant.Stock,
@@ -123,7 +135,7 @@ namespace Application.Services
                         Id = createdProducts.First().Id,
                         Name = productRequestDto.Name,
                         Gender = productRequestDto.Gender,
-                        Price = productRequestDto.Price,
+                        Price = normalizedPrice,
                         Category = productRequestDto.CategoryId,
                         ImageUrL = imageUrl,
                     }
@@ -285,7 +297,22 @@ namespace Application.Services
                 var newName = string.IsNullOrWhiteSpace(productRequestDto.Name) ? existingProduct.Name : productRequestDto.Name;
                 var newGender = productRequestDto.Gender > 0 ? productRequestDto.Gender : existingProduct.Gender;
                 var newCategoryId = productRequestDto.CategoryId > 0 ? productRequestDto.CategoryId : existingProduct.CategoryId;
-                var newPrice = productRequestDto.Price > 0 ? productRequestDto.Price : existingProduct.Price;
+                var newPrice = existingProduct.Price;
+                if (!string.IsNullOrWhiteSpace(productRequestDto.Price))
+                {
+                    if (!TryNormalizePrice(productRequestDto.Price, out var normalizedPrice))
+                    {
+                        _logger.LogWarning("Preço inválido informado para atualização do produto {ProductId}: {Price}", productId, productRequestDto.Price);
+                        return new ProductResponseDto
+                        {
+                            Message = "Preço inválido",
+                            Status = "invalid_argument",
+                            Data = null
+                        };
+                    }
+
+                    newPrice = normalizedPrice;
+                }
 
                 string imageUrl = existingProduct.ImageUrL;
                 if (productRequestDto.Image != null)
@@ -413,6 +440,25 @@ namespace Application.Services
                             .FirstOrDefault()?
                             .GetCustomAttribute<DisplayAttribute>()?
                             .GetName() ?? enumValue.ToString();
+        }
+
+        private static bool TryNormalizePrice(string rawPrice, out decimal price)
+        {
+            price = 0m;
+
+            if (string.IsNullOrWhiteSpace(rawPrice))
+            {
+                return false;
+            }
+
+            var normalized = rawPrice.Trim().Replace(",", ".");
+
+            if (!decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out price))
+            {
+                return false;
+            }
+
+            return price > 0;
         }
     }
 }

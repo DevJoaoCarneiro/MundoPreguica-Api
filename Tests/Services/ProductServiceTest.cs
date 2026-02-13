@@ -107,7 +107,7 @@ namespace Tests.Services
             {
                 Name = "Camiseta",
                 CategoryId = 2,
-                Price = 120,
+                Price = "120",
                 Gender = 1,
                 Image = Substitute.For<IFormFile>(),
                 Variant = new List<ProductVariantRequest>

@@ -16,8 +16,8 @@ namespace Application.Request
         [Range(1, int.MaxValue, ErrorMessage = "Categoria inválida.")]
         public int CategoryId { get; set; }
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Preço inválido.")]
-        public decimal Price { get; set; }
+        [Required(ErrorMessage = "Preço é obrigatório.")]
+        public string Price { get; set; } = string.Empty;
 
         [Range(1, int.MaxValue, ErrorMessage = "Gênero inválido.")]
         public int Gender { get; set; }
