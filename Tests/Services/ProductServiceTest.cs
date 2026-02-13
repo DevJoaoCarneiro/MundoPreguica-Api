@@ -91,7 +91,7 @@ namespace Tests.Services
             _imageUploadService.UploadImageAsync(Arg.Any<IFormFile>()).Returns("http://image");
             _productRepository.GetByNameAsync(request.Name).Returns(new List<Product>
             {
-                new Product { Size = ProductSize.Pequeno }
+                new Product { Size = ProductSize.AdultoG }
             });
 
             var result = await _service.CreateNewProduct(request);
