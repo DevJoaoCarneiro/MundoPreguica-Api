@@ -5,6 +5,8 @@ using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 
 namespace Application.Services
 {
@@ -165,11 +167,11 @@ namespace Application.Services
                         Gender = g.First().Gender,
                         Price = g.First().Price,
                         ImageUrL = g.First().ImageUrL,
-                        Status = g.First().Status.ToString(),
+                        Status = GetDisplayName(g.First().Status),
                         Variants = g.Select(v => new VariantInfo
                         {
                             Id = v.Id,
-                            Size = v.Size.ToString(),
+                            Size = GetDisplayName(v.Size),
                             Stock = v.Stock
                         }).OrderBy(v => v.Size).ToList()
                     }).ToList();
@@ -197,6 +199,7 @@ namespace Application.Services
                 };
             }
         }
+
 
         public async Task<ProductResponseDto> GetByIdAsync(Guid productId)
         {
@@ -238,7 +241,7 @@ namespace Application.Services
                         Variants = allVariants.Select(v => new VariantInfoResponse
                         {
                             Id = v.Id,
-                            Size = v.Size.ToString(),
+                            Size = GetDisplayName(v.Size),
                             Stock = v.Stock
                         }).OrderBy(v => v.Size).ToList()
                     }
@@ -323,7 +326,7 @@ namespace Application.Services
                         Variants = allVariants.Select(v => new VariantInfoResponse
                         {
                             Id = v.Id,
-                            Size = v.Size.ToString(),
+                            Size = GetDisplayName(v.Size),
                             Stock = v.Stock
                         }).OrderBy(x => x.Size).ToList()
                     }
@@ -386,7 +389,7 @@ namespace Application.Services
                     {
                         Id = updatedProduct.Id,
                         Name = updatedProduct.Name,
-                        ProductStatus = updatedProduct.Status.ToString(),
+                        ProductStatus = GetDisplayName(updatedProduct.Status),
                     }
                 };
             }
@@ -400,6 +403,16 @@ namespace Application.Services
                     Data = null
                 };
             }
+
+
+        }
+        private static string GetDisplayName(Enum enumValue)
+        {
+            return enumValue.GetType()
+                            .GetMember(enumValue.ToString())
+                            .FirstOrDefault()?
+                            .GetCustomAttribute<DisplayAttribute>()?
+                            .GetName() ?? enumValue.ToString();
         }
     }
 }

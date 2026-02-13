@@ -5,9 +5,11 @@ using Domain.Entities;
 using Domain.Entities.Enum;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Application.Services
@@ -419,16 +421,25 @@ namespace Application.Services
                 CustomerPhone = order.Client?.clientPhone ?? "N/A",
                 TotalValue = order.TotalValue,
                 Date = order.OrderDate,
-                OrderStatus = order.OrderStatus.ToString(),
-                OrderType = order.TypeOrder.ToString(),
+                OrderStatus = GetDisplayName(order.OrderStatus),
+                OrderType = GetDisplayName(order.TypeOrder),
                 Items = order.Items?.Select(i => new OrderItemSummaryDto
                 {
                     ProductId = i.ProductId,
                     ProductName = i.Product?.Name ?? "Produto Removido",
-                    Size = i.Product?.Size.ToString() ?? "-",
+                    Size = i.Product is null ? "-" : GetDisplayName(i.Product.Size),
                     Quantity = i.Quantity
                 }).ToList() ?? new List<OrderItemSummaryDto>()
             };
+        }
+
+        private static string GetDisplayName(Enum enumValue)
+        {
+            return enumValue.GetType()
+                            .GetMember(enumValue.ToString())
+                            .FirstOrDefault()?
+                            .GetCustomAttribute<DisplayAttribute>()?
+                            .GetName() ?? enumValue.ToString();
         }
     }
 }

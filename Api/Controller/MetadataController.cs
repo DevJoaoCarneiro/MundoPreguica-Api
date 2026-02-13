@@ -1,5 +1,7 @@
 ﻿using Domain.Entities.Enum;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 
 namespace Api.Controller
 {
@@ -15,7 +17,7 @@ namespace Api.Controller
                 .Select(s => new
                 {
                     Id = (int)s,
-                    Name = s.ToString()
+                    Name = GetDisplayName(s)
                 });
 
             return Ok(sizes);
@@ -29,7 +31,7 @@ namespace Api.Controller
                 .Select(s => new
                 {
                     Id = (int)s,
-                    Name = s.ToString()
+                    Name = GetDisplayName(s)
                 });
 
             return Ok(status);
@@ -44,10 +46,19 @@ namespace Api.Controller
                 .Select(s => new
                 {
                     Id = (int)s,
-                    Name = s.ToString()
+                    Name = GetDisplayName(s)
                 });
 
             return Ok(status);
+        }
+
+        private static string GetDisplayName(Enum enumValue)
+        {
+            return enumValue.GetType()
+                            .GetMember(enumValue.ToString())
+                            .FirstOrDefault()?
+                            .GetCustomAttribute<DisplayAttribute>()?
+                            .GetName() ?? enumValue.ToString();
         }
     }
 
