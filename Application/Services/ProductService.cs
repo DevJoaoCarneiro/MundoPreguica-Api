@@ -43,7 +43,7 @@ namespace Application.Services
                     };
                 }
 
-                if (!TryNormalizePrice(productRequestDto.Price, out var normalizedPrice))
+                if (!TryNormalizePriceField(productRequestDto.Price, true, out var normalizedPrice))
                 {
                     _logger.LogWarning("Preço inválido informado para criação do produto: {Price}", productRequestDto.Price);
                     return new ProductResponseDto
@@ -52,6 +52,25 @@ namespace Application.Services
                         Status = "invalid_argument",
                         Data = null
                     };
+                }
+
+                var requiredPrice = normalizedPrice ?? 0m;
+
+                decimal? normalizedOldPrice = null;
+                if (productRequestDto.IsPromotion)
+                {
+                    if (!TryNormalizePriceField(productRequestDto.OldPrice, false, out var parsedOldPrice))
+                    {
+                        _logger.LogWarning("Preço antigo inválido informado para criação do produto: {OldPrice}", productRequestDto.OldPrice);
+                        return new ProductResponseDto
+                        {
+                            Message = "Preço antigo inválido",
+                            Status = "invalid_argument",
+                            Data = null
+                        };
+                    }
+
+                    normalizedOldPrice = parsedOldPrice;
                 }
 
                 var duplicateSizes = productRequestDto.Variant
@@ -108,7 +127,9 @@ namespace Application.Services
                         Id = Guid.NewGuid(),
                         Name = productRequestDto.Name,
                         CategoryId = productRequestDto.CategoryId,
-                        Price = normalizedPrice,
+                        Price = requiredPrice,
+                        IsPromotion = productRequestDto.IsPromotion,
+                        OldPrice = productRequestDto.IsPromotion ? normalizedOldPrice : null,
                         ImageUrL = imageUrl,
                         Size = (ProductSize)variant.Size,
                         Stock = variant.Stock,
@@ -135,7 +156,9 @@ namespace Application.Services
                         Id = createdProducts.First().Id,
                         Name = productRequestDto.Name,
                         Gender = productRequestDto.Gender,
-                        Price = normalizedPrice,
+                        Price = requiredPrice,
+                        IsPromotion = productRequestDto.IsPromotion,
+                        OldPrice = productRequestDto.IsPromotion ? normalizedOldPrice : null,
                         Category = productRequestDto.CategoryId,
                         ImageUrL = imageUrl,
                     }
@@ -164,6 +187,7 @@ namespace Application.Services
                         filter.Name,
                         filter.CategoryId,
                         filter.gender,
+                    filter.IsPromotion,
                         filter.Status,
                         filter.Size,
                         currentPage,
@@ -178,6 +202,8 @@ namespace Application.Services
                         Category = g.First().Category?.Name ?? "Sem Categoria",
                         Gender = g.First().Gender,
                         Price = g.First().Price,
+                        IsPromotion = g.First().IsPromotion,
+                        OldPrice = g.First().OldPrice,
                         ImageUrL = g.First().ImageUrL,
                         Status = GetDisplayName(g.First().Status),
                         Variants = g.Select(v => new VariantInfo
@@ -248,6 +274,8 @@ namespace Application.Services
                         Category = productVariant.CategoryId,
                         Gender = productVariant.Gender,
                         Price = productVariant.Price,
+                        IsPromotion = productVariant.IsPromotion,
+                        OldPrice = productVariant.OldPrice,
                         ImageUrL = productVariant.ImageUrL,
 
                         Variants = allVariants.Select(v => new VariantInfoResponse
@@ -297,21 +325,42 @@ namespace Application.Services
                 var newName = string.IsNullOrWhiteSpace(productRequestDto.Name) ? existingProduct.Name : productRequestDto.Name;
                 var newGender = productRequestDto.Gender > 0 ? productRequestDto.Gender : existingProduct.Gender;
                 var newCategoryId = productRequestDto.CategoryId > 0 ? productRequestDto.CategoryId : existingProduct.CategoryId;
-                var newPrice = existingProduct.Price;
-                if (!string.IsNullOrWhiteSpace(productRequestDto.Price))
+                var newIsPromotion = productRequestDto.IsPromotion ?? existingProduct.IsPromotion;
+                var newOldPrice = existingProduct.OldPrice;
+                if (productRequestDto.OldPrice != null)
                 {
-                    if (!TryNormalizePrice(productRequestDto.Price, out var normalizedPrice))
+                    if (!TryNormalizePriceField(productRequestDto.OldPrice, false, out var parsedOldPrice))
                     {
-                        _logger.LogWarning("Preço inválido informado para atualização do produto {ProductId}: {Price}", productId, productRequestDto.Price);
+                        _logger.LogWarning("Preço antigo inválido informado para atualização do produto {ProductId}: {OldPrice}", productId, productRequestDto.OldPrice);
                         return new ProductResponseDto
                         {
-                            Message = "Preço inválido",
+                            Message = "Preço antigo inválido",
                             Status = "invalid_argument",
                             Data = null
                         };
                     }
 
-                    newPrice = normalizedPrice;
+                    newOldPrice = parsedOldPrice;
+                }
+                if (!newIsPromotion)
+                {
+                    newOldPrice = null;
+                }
+                var newPrice = existingProduct.Price;
+                if (!TryNormalizePriceField(productRequestDto.Price, false, out var normalizedPrice))
+                {
+                    _logger.LogWarning("Preço inválido informado para atualização do produto {ProductId}: {Price}", productId, productRequestDto.Price);
+                    return new ProductResponseDto
+                    {
+                        Message = "Preço inválido",
+                        Status = "invalid_argument",
+                        Data = null
+                    };
+                }
+
+                if (normalizedPrice.HasValue)
+                {
+                    newPrice = normalizedPrice.Value;
                 }
 
                 string imageUrl = existingProduct.ImageUrL;
@@ -330,6 +379,8 @@ namespace Application.Services
                     p.CategoryId = newCategoryId;
                     p.Gender = newGender;
                     p.Price = newPrice;
+                    p.IsPromotion = newIsPromotion;
+                    p.OldPrice = newOldPrice;
                     p.ImageUrL = imageUrl;
                     p.UpdatedAt = DateTime.UtcNow;
                     await _productRepository.UpdateAsync(p);
@@ -347,6 +398,8 @@ namespace Application.Services
                         Id = existingProduct.Id,
                         Name = allVariants.First().Name,
                         Price = allVariants.First().Price,
+                        IsPromotion = allVariants.First().IsPromotion,
+                        OldPrice = allVariants.First().OldPrice,
                         Category = allVariants.First().CategoryId,
                         Gender = allVariants.First().Gender,
                         ImageUrL = imageUrl,
@@ -459,6 +512,24 @@ namespace Application.Services
             }
 
             return price > 0;
+        }
+
+        private static bool TryNormalizePriceField(string? rawPrice, bool isRequired, out decimal? normalizedPrice)
+        {
+            normalizedPrice = null;
+
+            if (string.IsNullOrWhiteSpace(rawPrice))
+            {
+                return !isRequired;
+            }
+
+            if (!TryNormalizePrice(rawPrice, out var parsedPrice))
+            {
+                return false;
+            }
+
+            normalizedPrice = parsedPrice;
+            return true;
         }
     }
 }

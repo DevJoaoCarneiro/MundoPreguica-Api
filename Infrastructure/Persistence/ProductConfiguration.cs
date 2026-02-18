@@ -24,6 +24,14 @@ namespace Infrastructure.Persistence
                    .HasPrecision(10, 2)
                    .IsRequired();
 
+            builder.Property(p => p.IsPromotion)
+                   .HasColumnName("is_promotion")
+                   .IsRequired();
+
+            builder.Property(p => p.OldPrice)
+                   .HasColumnName("preco_antigo")
+                   .HasPrecision(10, 2);
+
             builder.Property(p => p.ImageUrL)
                    .HasColumnName("image_url")
                    .IsRequired();

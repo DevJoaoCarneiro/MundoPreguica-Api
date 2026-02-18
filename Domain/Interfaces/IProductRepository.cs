@@ -15,6 +15,7 @@ namespace Domain.Interfaces
             string? name,
             int? categoryId,
             int? gender,
+            bool? isPromotion,
             ProductStatus? status,
             ProductSize? size,
             int page,

@@ -41,6 +41,7 @@ namespace Infrastructure.Repositories
             string? name,
             int? categoryId,
             int? gender,
+            bool? isPromotion,
             ProductStatus? status,
             ProductSize? size,
             int page,
@@ -62,6 +63,9 @@ namespace Infrastructure.Repositories
 
                 if (gender.HasValue && gender > 0)
                     query = query.Where(p => p.Gender == gender.Value);
+
+                if (isPromotion.HasValue)
+                    query = query.Where(p => p.IsPromotion == isPromotion.Value);
 
                 if (status.HasValue)
                     query = query.Where(p => p.Status == status.Value);

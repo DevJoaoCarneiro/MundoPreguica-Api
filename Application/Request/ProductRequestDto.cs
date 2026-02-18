@@ -19,6 +19,10 @@ namespace Application.Request
         [Required(ErrorMessage = "Preço é obrigatório.")]
         public string Price { get; set; } = string.Empty;
 
+        public bool IsPromotion { get; set; }
+
+        public string? OldPrice { get; set; }
+
         [Range(1, int.MaxValue, ErrorMessage = "Gênero inválido.")]
         public int Gender { get; set; }
         public IFormFile? Image { get; set; }

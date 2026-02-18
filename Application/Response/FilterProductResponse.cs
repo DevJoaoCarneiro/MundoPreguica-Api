@@ -28,6 +28,8 @@ namespace Application.Response
         public int Gender { get; set; }
         public string Status { get; set; } = string.Empty;
         public decimal Price { get; set; }
+        public bool IsPromotion { get; set; }
+        public decimal? OldPrice { get; set; }
         public string ImageUrL { get; set; } = string.Empty;
 
         public List<VariantInfo> Variants { get; set; } = new List<VariantInfo>();

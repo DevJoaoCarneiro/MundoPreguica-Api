@@ -18,6 +18,8 @@
 
         public int Gender { get; set; }
         public decimal Price { get; set; }
+        public bool IsPromotion { get; set; }
+        public decimal? OldPrice { get; set; }
         public string ImageUrL { get; set; } = string.Empty;
 
         public List<VariantInfoResponse> Variants { get; set; } = new List<VariantInfoResponse>();

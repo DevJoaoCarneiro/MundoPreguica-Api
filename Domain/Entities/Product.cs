@@ -11,6 +11,10 @@ namespace Domain.Entities
         
         public decimal Price { get; set; }
 
+        public bool IsPromotion { get; set; }
+
+        public decimal? OldPrice { get; set; }
+
         public string ImageUrL { get; set; } = string.Empty;
 
         public int Stock { get; set; }

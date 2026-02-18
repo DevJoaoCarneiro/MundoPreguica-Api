@@ -14,6 +14,10 @@ namespace Application.Request
 
         public string? Price { get; set; }
 
+        public bool? IsPromotion { get; set; }
+
+        public string? OldPrice { get; set; }
+
         public int Gender { get; set; }
         public IFormFile? Image { get; set; }
     }
