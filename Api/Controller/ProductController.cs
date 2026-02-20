@@ -2,6 +2,7 @@
 using Application.Request;
 using Application.Service;
 using Domain.Entities.Enum;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 
@@ -21,6 +22,7 @@ namespace Api.controller
             _logger = logger;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> createProduct([FromForm] ProductRequestDto productRequestDto)
         {
@@ -105,6 +107,7 @@ namespace Api.controller
 
         }
 
+        [Authorize]
         [HttpPut]
         [Route("{productId}")]
         public async Task<IActionResult> updateProduct([FromRoute] Guid productId, [FromForm] ProductRequestUpdateDto productRequestDto)
@@ -135,6 +138,7 @@ namespace Api.controller
             }
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("{productId}/status")]
         public async Task<IActionResult> updateProductStatus([FromRoute] Guid productId, [FromBody] int newStatus)

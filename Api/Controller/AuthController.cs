@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Request;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,6 +44,7 @@ namespace Api.controller
             }
         }
 
+        [Authorize]
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDTO refreshTokenRequestDTO)
         {

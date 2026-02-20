@@ -25,6 +25,8 @@ namespace Infrastructure.Provider
         public string GenerateToken(User user)
         {
             var secretKey = _configuration["Jwt:Secret"];
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
             var key = Encoding.ASCII.GetBytes(secretKey);
 
             var tokenConfig = new SecurityTokenDescriptor
@@ -36,6 +38,8 @@ namespace Infrastructure.Provider
                     new Claim(ClaimTypes.Email, user.Email)
                 }),
                 Expires = DateTime.UtcNow.AddHours(8),
+                Issuer = issuer,
+                Audience = audience,
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature)

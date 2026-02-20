@@ -2,6 +2,7 @@
 using Application.Request;
 using Application.Services;
 using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography.X509Certificates;
 
@@ -53,6 +54,7 @@ namespace Api.Controller
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> getAllOrder([FromQuery] OrderFilterRequest filter)
         {
             try
@@ -77,6 +79,7 @@ namespace Api.Controller
                 });
             }
         }
+        [Authorize]
         [HttpGet]
         [Route("{orderId}")]
         public async Task<IActionResult> getOrderById([FromRoute] Guid orderId)
@@ -101,6 +104,7 @@ namespace Api.Controller
             }
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("{orderId}/status")]
         public async Task<IActionResult> updateOrderStatus([FromRoute] Guid orderId)
@@ -125,6 +129,7 @@ namespace Api.Controller
             }
         }
 
+        [Authorize]
         [HttpPut]
         [Route("{orderId}/return")]
         public async Task<IActionResult> updateConsignedOrder([FromRoute] Guid orderId, [FromBody] SettleConsignmentRequestDto request)
@@ -155,6 +160,7 @@ namespace Api.Controller
             }
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("{orderId}/cancel")]
         public async Task<IActionResult> cancelOrder([FromRoute] Guid orderId)

@@ -1,5 +1,6 @@
 ﻿
 using Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controller
@@ -46,6 +47,7 @@ namespace Api.Controller
 
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> createCategory([FromBody] string name)
         {
@@ -71,6 +73,7 @@ namespace Api.Controller
             }
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> deleteCategory([FromRoute] int id)
         {

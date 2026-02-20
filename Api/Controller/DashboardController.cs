@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using System;
 
 namespace Api.Controller
@@ -17,6 +18,7 @@ namespace Api.Controller
             _dashboardService = dashboardService;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> getDashboardData([FromQuery] int? year, [FromQuery] int? startMonth, [FromQuery] int? endMonth)
         {
