@@ -96,7 +96,7 @@ namespace Tests.Services
 
             Assert.Equal("success", result.Status);
             Assert.Equal("Pedido finalizado com sucesso!", result.Message);
-            Assert.Equal("Pending", result.Order?.OrderStatus);
+            Assert.Equal("Pendente", result.Order?.OrderStatus);
             Assert.Equal(200, result.Order?.TotalValue);
 
             await _productRepository.Received(1).UpdateAsync(Arg.Is<Product>(p => p.Stock == 3));
@@ -132,7 +132,7 @@ namespace Tests.Services
             var result = await _service.createNewOrderAsync(request);
 
             Assert.Equal("success", result.Status);
-            Assert.Equal("Pending", result.Order?.OrderStatus);
+            Assert.Equal("Pendente", result.Order?.OrderStatus);
             Assert.Equal(80, result.Order?.TotalValue);
         }
 
@@ -212,7 +212,7 @@ namespace Tests.Services
 
             Assert.Equal("success", result.Status);
             Assert.Equal("Liquidação concluída.", result.Message);
-            Assert.Equal("Finish", result.Order?.OrderStatus);
+            Assert.Equal("Finalizado", result.Order?.OrderStatus);
             Assert.Equal(30, result.Order?.TotalValue);
 
             await _productRepository.Received(1).UpdateAsync(Arg.Is<Product>(p => p.Stock == 3));

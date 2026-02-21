@@ -41,6 +41,7 @@ namespace Tests.Services
             var request = new ProductRequestDto
             {
                 Name = "Camiseta",
+                Price = "120",
                 Variant = new List<ProductVariantRequest>
                 {
                     new ProductVariantRequest { Size = 1, Stock = 10 },
@@ -60,9 +61,10 @@ namespace Tests.Services
             var request = new ProductRequestDto
             {
                 Name = "Camiseta",
+                Price = "120",
                 Variant = new List<ProductVariantRequest>
                 {
-                    new ProductVariantRequest { Size = 1, Stock = 10 }
+                    new ProductVariantRequest { Size = 13, Stock = 10 }
                 },
                 Image = Substitute.For<IFormFile>()
             };
@@ -81,9 +83,10 @@ namespace Tests.Services
             var request = new ProductRequestDto
             {
                 Name = "Camiseta",
+                Price = "120",
                 Variant = new List<ProductVariantRequest>
                 {
-                    new ProductVariantRequest { Size = 1, Stock = 10 }
+                    new ProductVariantRequest { Size = 13, Stock = 10 }
                 },
                 Image = Substitute.For<IFormFile>()
             };
@@ -175,7 +178,7 @@ namespace Tests.Services
 
             Assert.Equal("success", result.Status);
             Assert.Equal("Status atualizado com sucesso", result.Message);
-            Assert.Equal("Inactive", result.Data?.ProductStatus);
+            Assert.Equal("Indisponível", result.Data?.ProductStatus);
         }
     }
 }
