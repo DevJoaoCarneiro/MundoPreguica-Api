@@ -86,7 +86,7 @@ namespace Tests.Services
                 Price = "120",
                 Variant = new List<ProductVariantRequest>
                 {
-                    new ProductVariantRequest { Size = 13, Stock = 10 }
+                    new ProductVariantRequest { Size = 33, Stock = 10 }
                 },
                 Image = Substitute.For<IFormFile>()
             };

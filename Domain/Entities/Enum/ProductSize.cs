@@ -8,34 +8,45 @@ namespace Domain.Entities.Enum
 {
     public enum ProductSize
     {
+        [Display(Name = "Tamanho P")]
+        Bebe1 = 1,
+        [Display(Name = "Tamanho M")]
+        Bebe2 = 2,
+        [Display(Name = "Tamanho G")]
+        Bebe3 = 3,
+        [Display(Name = "Tamanho GG")]
+        Bebe4 = 4,
+
+        [Display(Name = "Tamanho 1")]
+        Infantil1 = 6,
         [Display(Name = "Tamanho 2")]
-        Infantil2 = 1,
+        Infantil2 = 7,
         [Display(Name = "Tamanho 3")]
-        Infantil3 = 2,
+        Infantil3 = 8,
         [Display(Name = "Tamanho 4")]
-        Infantil4 = 3,
+        Infantil4 = 9,
         [Display(Name = "Tamanho 6")]
-        Infantil6 = 4,
+        Infantil6 = 10,
         [Display(Name = "Tamanho 8")]
-        Infantil8 = 5,
+        Infantil8 = 11,
         [Display(Name = "Tamanho 10")]
-        Infantil10 = 6,
+        Infantil10 = 12,
         [Display(Name = "Tamanho 12")]
-        Infantil12 = 7,
+        Infantil12 = 13,
         [Display(Name = "Tamanho 14")]
-        Infantil14 = 8,
+        Infantil14 = 14,
         [Display(Name = "Tamanho 16")]
-        Infantil16 = 9,
+        Infantil16 = 15,
 
         [Display(Name = "Adulto PP")]
-        AdultoPP = 10,
+        AdultoPP = 30,
         [Display(Name = "Adulto P")]
-        AdultoP = 11,
+        AdultoP = 31,
         [Display(Name = "Adulto M")]
-        AdultoM = 12,
+        AdultoM = 32,
         [Display(Name = "Adulto G")]
-        AdultoG = 13,
+        AdultoG = 33,
         [Display(Name = "Adulto GG")]
-        AdultoGG = 14,
+        AdultoGG = 34,
     }
 }
