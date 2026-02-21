@@ -194,7 +194,6 @@ namespace Application.Services
                         pageSize);
 
                 var groupedList = products
-                    .GroupBy(p => p.Name)
                     .Select(g => new DataResponse
                     {
                         Id = g.First().Id,

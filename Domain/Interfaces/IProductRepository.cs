@@ -11,7 +11,7 @@ namespace Domain.Interfaces
     {
         Task<Product> AddAsync(Product product);
 
-        Task<(IEnumerable<Product> Products, int TotalCount)> GetByFiltersAsync(
+        Task<(IEnumerable<IGrouping<string, Product>> Products, int TotalCount)> GetByFiltersAsync(
             string? name,
             int? categoryId,
             int? gender,

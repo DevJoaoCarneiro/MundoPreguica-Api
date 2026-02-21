@@ -37,7 +37,7 @@ namespace Infrastructure.Repositories
             }
         }
 
-        public async Task<(IEnumerable<Product> Products, int TotalCount)> GetByFiltersAsync(
+        public async Task<(IEnumerable<IGrouping<string, Product>> Products, int TotalCount)> GetByFiltersAsync(
             string? name,
             int? categoryId,
             int? gender,
@@ -73,17 +73,40 @@ namespace Infrastructure.Repositories
                 if (size.HasValue)
                     query = query.Where(p => p.Size == size.Value);
 
-                var totalCount = await query.CountAsync();
+                var groupedQuery = query
+                    .GroupBy(p => p.Name)
+                    .Select(g => new
+                    {
+                        Name = g.Key,
+                        MaxCreatedAt = g.Max(p => p.CreatedAt)
+                    });
 
-                var products = await query
-                    .OrderByDescending(p => p.CreatedAt)
+                var totalCount = await groupedQuery.CountAsync();
+
+                var pageNames = await groupedQuery
+                    .OrderByDescending(g => g.MaxCreatedAt)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
+                    .Select(g => g.Name)
                     .ToListAsync();
 
-                _logger.LogInformation("Consulta finalizada. {Count} produtos na página. Total no banco: {Total}", products.Count, totalCount);
+                var products = await query
+                    .Where(p => pageNames.Contains(p.Name))
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToListAsync();
 
-                return (products, totalCount);
+                var nameOrder = pageNames
+                    .Select((name, index) => new { name, index })
+                    .ToDictionary(x => x.name, x => x.index);
+
+                var groupedProducts = products
+                    .GroupBy(p => p.Name)
+                    .OrderBy(g => nameOrder[g.Key])
+                    .ToList();
+
+                _logger.LogInformation("Consulta finalizada. {Count} produtos na página. Total no banco: {Total}", groupedProducts.Count, totalCount);
+
+                return (groupedProducts, totalCount);
             }
             catch (Exception ex)
             {
