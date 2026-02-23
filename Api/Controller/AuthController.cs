@@ -44,7 +44,6 @@ namespace Api.controller
             }
         }
 
-        [Authorize]
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDTO refreshTokenRequestDTO)
         {
