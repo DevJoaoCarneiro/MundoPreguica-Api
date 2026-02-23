@@ -443,19 +443,23 @@ namespace Application.Services
                     };
                 }
 
-                existingProduct.Status = newStatus;
-                existingProduct.UpdatedAt = DateTime.UtcNow;
+                var allVariants = (await _productRepository.GetByNameAsync(existingProduct.Name)).ToList();
 
-                var updatedProduct = await _productRepository.UpdateAsync(existingProduct);
-
-                if (updatedProduct == null)
+                foreach (var variant in allVariants)
                 {
-                    return new ProductStatusResponseDto
+                    variant.Status = newStatus;
+                    variant.UpdatedAt = DateTime.UtcNow;
+
+                    var updatedVariant = await _productRepository.UpdateAsync(variant);
+                    if (updatedVariant == null)
                     {
-                        Message = "Erro ao persistir a mudança de status no banco",
-                        Status = "error",
-                        Data = null
-                    };
+                        return new ProductStatusResponseDto
+                        {
+                            Message = "Erro ao persistir a mudança de status no banco",
+                            Status = "error",
+                            Data = null
+                        };
+                    }
                 }
 
                 _logger.LogInformation("Status do produto {ProductId} alterado para {Status} com sucesso.", productId, newStatus);
@@ -466,9 +470,9 @@ namespace Application.Services
                     Status = "success",
                     Data = new DataStatus
                     {
-                        Id = updatedProduct.Id,
-                        Name = updatedProduct.Name,
-                        ProductStatus = GetDisplayName(updatedProduct.Status),
+                        Id = existingProduct.Id,
+                        Name = existingProduct.Name,
+                        ProductStatus = GetDisplayName(newStatus),
                     }
                 };
             }
