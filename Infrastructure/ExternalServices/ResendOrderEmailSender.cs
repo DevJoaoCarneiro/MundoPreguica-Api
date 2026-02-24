@@ -1,20 +1,27 @@
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using Application.Interfaces;
 using Application.Notifications;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net;
-using System.Net.Mail;
-using System.Text;
 
 namespace Infrastructure.ExternalServices
 {
-    public class SmtpOrderEmailSender : IOrderEmailSender
+    public class ResendOrderEmailSender : IOrderEmailSender
     {
-        private readonly EmailNotificationSettings _settings;
-        private readonly ILogger<SmtpOrderEmailSender> _logger;
+        private const string ResendEndpoint = "https://api.resend.com/emails";
 
-        public SmtpOrderEmailSender(IOptions<EmailNotificationSettings> settings, ILogger<SmtpOrderEmailSender> logger)
+        private readonly EmailNotificationSettings _settings;
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<ResendOrderEmailSender> _logger;
+
+        public ResendOrderEmailSender(
+            HttpClient httpClient,
+            IOptions<EmailNotificationSettings> settings,
+            ILogger<ResendOrderEmailSender> logger)
         {
+            _httpClient = httpClient;
             _settings = settings.Value;
             _logger = logger;
         }
@@ -27,36 +34,61 @@ namespace Infrastructure.ExternalServices
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(_settings.Host) ||
-                string.IsNullOrWhiteSpace(_settings.From) ||
-                string.IsNullOrWhiteSpace(_settings.To))
+            var apiKey = Environment.GetEnvironmentVariable("RESEND_API_KEY");
+            if (string.IsNullOrWhiteSpace(apiKey))
             {
-                _logger.LogWarning("Configuração de e-mail incompleta. Verifique seção EmailNotification.");
+                apiKey = _settings.ResendApiKey;
+            }
+
+            var destination = Environment.GetEnvironmentVariable("ADMIN_EMAIL");
+            if (string.IsNullOrWhiteSpace(destination))
+            {
+                destination = _settings.AdminEmail;
+            }
+
+            var from = _settings.From;
+            if (string.IsNullOrWhiteSpace(from))
+            {
+                from = "MundoPreguica <onboarding@resend.dev>";
+            }
+
+            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(destination))
+            {
+                _logger.LogWarning("Configuração de envio via Resend incompleta. Verifique RESEND_API_KEY/ADMIN_EMAIL ou seção EmailNotification.");
                 return;
             }
 
-            using var client = new SmtpClient(_settings.Host, _settings.Port)
-            {
-                EnableSsl = _settings.UseSsl,
-                Credentials = string.IsNullOrWhiteSpace(_settings.Username)
-                    ? CredentialCache.DefaultNetworkCredentials
-                    : new NetworkCredential(_settings.Username, _settings.Password)
-            };
+            var recipients = destination
+                .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-            using var message = new MailMessage
+            if (recipients.Length == 0)
             {
-                From = new MailAddress(_settings.From),
-                Subject = $"Novo pedido recebido - {notification.OrderId}",
-                Body = BuildBody(notification),
-                IsBodyHtml = true
-            };
-
-            foreach (var address in _settings.To.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            {
-                message.To.Add(address);
+                _logger.LogWarning("Nenhum destinatário válido configurado para envio via Resend.");
+                return;
             }
 
-            await client.SendMailAsync(message, cancellationToken);
+            var payload = new
+            {
+                from,
+                to = recipients,
+                subject = $"Novo pedido recebido - {notification.OrderId}",
+                html = BuildBody(notification)
+            };
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, ResendEndpoint)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError("Falha ao enviar e-mail via Resend. Status: {StatusCode}. Resposta: {Response}", response.StatusCode, errorContent);
+                response.EnsureSuccessStatusCode();
+            }
         }
 
         private static string BuildBody(OrderCreatedEmailNotification notification)

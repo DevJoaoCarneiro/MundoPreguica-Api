@@ -48,7 +48,7 @@ O projeto segue um estilo clean architecture com separacao entre camadas de API,
 - Entity Framework Core + Npgsql (PostgreSQL)
 - JWT para autenticacao
 - Cloudinary para upload de imagem
-- SMTP (Mailtrap no dev) para notificacoes
+- Resend API para notificacoes de pedido
 - Docker para deploy
 
 ## Requisitos
@@ -69,13 +69,11 @@ Defina as variaveis de ambiente abaixo (ou use secrets localmente). O projeto le
 | Cloudinary__ApiKey | Cloudinary api key |
 | Cloudinary__ApiSecret | Cloudinary api secret |
 | EmailNotification__Enabled | true/false para envio de email |
-| EmailNotification__Host | Host SMTP |
-| EmailNotification__Port | Porta SMTP |
-| EmailNotification__UseSsl | true/false |
-| EmailNotification__Username | Usuario SMTP |
-| EmailNotification__Password | Senha SMTP |
-| EmailNotification__From | Email de origem |
-| EmailNotification__To | Email destino padrao |
+| RESEND_API_KEY | API key da Resend |
+| ADMIN_EMAIL | Email admin que recebe notificacoes |
+| EmailNotification__ResendApiKey | Fallback para API key (quando variavel global nao existir) |
+| EmailNotification__AdminEmail | Fallback para email destino (quando variavel global nao existir) |
+| EmailNotification__From | Remetente exibido (ex.: MundoPreguica <onboarding@resend.dev>) |
 
 Observacao: o projeto aplica migrations automaticamente no startup.
 

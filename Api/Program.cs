@@ -109,7 +109,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 builder.Services.AddScoped<IDomainEventHandler<OrderCreatedEvent>, OrderCreatedEventHandler>();
 builder.Services.AddSingleton<IOrderCreatedEmailQueue, OrderCreatedEmailQueue>();
-builder.Services.AddScoped<IOrderEmailSender, SmtpOrderEmailSender>();
+builder.Services.AddHttpClient<IOrderEmailSender, ResendOrderEmailSender>();
 builder.Services.AddHostedService<OrderCreatedEmailHostedService>();
 builder.Services.Configure<EmailNotificationSettings>(builder.Configuration.GetSection("EmailNotification"));
 
