@@ -277,12 +277,15 @@ namespace Application.Services
                         OldPrice = productVariant.OldPrice,
                         ImageUrL = productVariant.ImageUrL,
 
-                        Variants = allVariants.Select(v => new VariantInfoResponse
-                        {
-                            Id = v.Id,
-                            Size = GetDisplayName(v.Size),
-                            Stock = v.Stock
-                        }).OrderBy(v => v.Size).ToList()
+                        Variants = allVariants
+                            .OrderBy(v => (int)v.Size)
+                            .Select(v => new VariantInfoResponse
+                            {
+                                Id = v.Id,
+                                Size = GetDisplayName(v.Size),
+                                Stock = v.Stock
+                            })
+                            .ToList()
                     }
                 };
             }
