@@ -45,12 +45,13 @@ namespace Application.Services
 
                 for (int month = resolvedStartMonth; month <= resolvedEndMonth; month++)
                 {
-                    if (summaryByMonth.TryGetValue(month, out DashboardMonthlySummary summary))
+                    if (summaryByMonth.TryGetValue(month, out var summary) && summary is not null)
                     {
                         months.Add(new DashboardMonthlySummaryDto
                         {
                             Year = summary.Year,
                             Month = summary.Month,
+                            TotalRevenue = summary.TotalRevenue,
                             AverageOrderValue = summary.AverageOrderValue,
                             TotalOrders = summary.TotalOrders,
                             SalesCount = summary.SalesCount,
@@ -63,6 +64,7 @@ namespace Application.Services
                         {
                             Year = resolvedYear,
                             Month = month,
+                            TotalRevenue = 0,
                             AverageOrderValue = 0,
                             TotalOrders = 0,
                             SalesCount = 0,
@@ -75,6 +77,7 @@ namespace Application.Services
                 {
                     Message = "Dashboard carregado com sucesso.",
                     Status = "success",
+                    TotalRevenue = months.Sum(m => m.TotalRevenue),
                     Months = months
                 };
             }

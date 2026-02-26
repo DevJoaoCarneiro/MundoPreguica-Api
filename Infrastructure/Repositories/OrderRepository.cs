@@ -103,12 +103,13 @@ namespace Infrastructure.Repositories
 
             return await _context.Orders
                 .AsNoTracking()
-                .Where(o => o.OrderDate >= startDate && o.OrderDate < endDate)
+                .Where(o => o.OrderDate >= startDate && o.OrderDate < endDate && o.OrderStatus == OrderStatus.Finish)
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
                 .Select(group => new DashboardMonthlySummary
                 {
                     Year = group.Key.Year,
                     Month = group.Key.Month,
+                    TotalRevenue = group.Sum(o => o.TotalValue),
                     TotalOrders = group.Count(),
                     SalesCount = group.Count(o => o.TypeOrder == OrderType.Sale),
                     ConsignmentCount = group.Count(o => o.TypeOrder == OrderType.Consignment),
