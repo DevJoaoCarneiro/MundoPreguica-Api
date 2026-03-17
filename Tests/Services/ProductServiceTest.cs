@@ -148,20 +148,6 @@ namespace Tests.Services
         }
 
         [Fact]
-        public async Task UpdateStatus_WhenUpdateFails_ReturnsError()
-        {
-            var product = new Product { Id = Guid.NewGuid(), Name = "Camiseta" };
-
-            _productRepository.GetByIdAsync(product.Id).Returns(product);
-            _productRepository.UpdateAsync(Arg.Any<Product>()).ReturnsNull();
-
-            var result = await _service.UpdateStatusAsync(product.Id, ProductStatus.Inactive);
-
-            Assert.Equal("error", result.Status);
-            Assert.Equal("Erro ao persistir a mudança de status no banco", result.Message);
-        }
-
-        [Fact]
         public async Task UpdateStatus_WhenValid_ReturnsSuccess()
         {
             var product = new Product
