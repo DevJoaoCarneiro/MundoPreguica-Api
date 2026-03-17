@@ -1,10 +1,7 @@
 ﻿using Application.Interfaces;
 using Application.Request;
-using Application.Services;
-using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Api.Controller
 {

@@ -22,7 +22,7 @@ public class UserServiceTest
     }
 
     [Fact]
-    public async void Should_Create_New_User_Corretly()
+    public async Task Should_Create_New_User_Corretly()
     {
         //Arrange
         var request = new UserRequestDTO

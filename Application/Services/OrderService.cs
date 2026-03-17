@@ -270,7 +270,7 @@ namespace Application.Services
 
         public async Task<OrderResponseDto> UpdateOrderStatusAsync(Guid orderId)
         {
-            _unitOfWork.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 if (orderId == Guid.Empty)
@@ -318,7 +318,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao atualizar status do pedido.");
-                _unitOfWork.RollbackTransactionAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 return new OrderResponseDto
                 {
                     Message = "Erro interno: " + ex.Message,

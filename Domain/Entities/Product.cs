@@ -1,5 +1,4 @@
 ﻿using Domain.Entities.Enum;
-using System.Drawing;
 
 namespace Domain.Entities
 {
@@ -28,7 +27,7 @@ namespace Domain.Entities
 
         public DateTime UpdatedAt { get; set; }
 
-        public Category Category { get; set; }
+        public Category Category { get; set; } = null!;
 
         public int CategoryId { get;  set; }
     }
